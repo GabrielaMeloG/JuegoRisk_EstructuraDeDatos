@@ -1,4 +1,4 @@
-#ifdef JUEGO_H
+#ifndef JUEGO_H
 #define JUEGO_H
 #include <string>
 #include <vector>
@@ -11,6 +11,14 @@ struct Jugador {
     bool obtenidoUnidades;
     bool haAtacado; 
 };
+
+//TAD territorio
+struct Territorio {
+    std::string codigo;
+    std::string colorOcupante;
+    int unidades;
+};
+
 
 //TAD EstadoJuego
 class EstadoJuego {
