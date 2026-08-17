@@ -22,16 +22,16 @@ void EjecutorConfig::obtenerUnidades(EstadoJuego &estado, std::vector<std::strin
         return;
     }
     if(!estado.inicializado){
-        std::cout << "El juego no ha sido inicializado." << std::endl;
+        std::cout << "El juego no ha sido inicializado aún." << std::endl;
         return;
     }else if(estado.terminado){
         std::cout << "El juego ya ha terminado." << std::endl;
         return;
+    }else if(estado.existeJugador(tokens[1]) == false){
+        std::cout << "El jugador " << tokens[1] << " no hace parte de esta partida." << std::endl;
+        return;
     }else if(estado.jugadorActual() != tokens[1]){
         std::cout << "No es el turno del jugador " << tokens[1] << "." << std::endl;
-        return;
-    }else if(estado.existeJugador(tokens[1]) == false){
-        std::cout << "El jugador " << tokens[1] << " no existe." << std::endl;
         return;
     }else{
         std::cout << "El jugador ha reclamado y ubicado todas sus unidades." << std::endl;
@@ -49,11 +49,11 @@ void EjecutorConfig::atacar(EstadoJuego &estado, std::vector<std::string> &token
     }else if(estado.terminado){
         std::cout << "El juego ya ha terminado." << std::endl;
         return;
+    }else if(estado.existeJugador(tokens[1]) == false){
+        std::cout << "El jugador " << tokens[1] << " no hace parte de esta partida." << std::endl;
+        return;
     }else if(estado.jugadorActual() != tokens[1]){
         std::cout << "No es el turno del jugador " << tokens[1] << "." << std::endl;
-        return;
-    }else if(estado.existeJugador(tokens[1]) == false){
-        std::cout << "El jugador " << tokens[1] << " no existe." << std::endl;
         return;
     }else if(estado.jugadores[idJugador].obtenidoUnidades == false){
         std::cout << "El jugador " << tokens[1] << " no ha reclamado y ubicado todas sus unidades." << std::endl;
@@ -74,11 +74,11 @@ void EjecutorConfig::fortificar(EstadoJuego &estado, std::vector<std::string> &t
     }else if(estado.terminado){
         std::cout << "El juego ya ha terminado." << std::endl;
         return;
+    }else if(estado.existeJugador(tokens[1]) == false){
+        std::cout << "El jugador " << tokens[1] << " no hace parte de esta partida." << std::endl;
+        return;
     }else if(estado.jugadorActual() != tokens[1]){
         std::cout << "No es el turno del jugador " << tokens[1] << "." << std::endl;
-        return;
-    }else if(estado.existeJugador(tokens[1]) == false){
-        std::cout << "El jugador " << tokens[1] << " no existe." << std::endl;
         return;
     }else if(estado.jugadores[idJugador].haAtacado == false){
         std::cout << "El jugador " << tokens[1] << " no ha atacado." << std::endl;
@@ -128,7 +128,7 @@ void EjecutorConfig::ayuda(EstadoJuego &estado, std::vector<std::string> &tokens
         bool encontrado = false;
         for(size_t i = 0; i < comandos.size(); ++i){
             if(comando == comandos[i]){
-                std::cout << "Uso del comando '" << comando << "': " << usos[i] << std::endl;
+                std::cout << "Uso correcto del comando '" << comando << "': " << usos[i] << std::endl;
                 encontrado = true;
                 break;
             }
@@ -173,6 +173,8 @@ void EjecutorConfig::costoConquista(EstadoJuego &estado, std::vector<std::string
     }else if(estado.terminado){
         std::cout << "El juego ya ha terminado." << std::endl;
         return;
+    }else if(estado.existeJugador(tokens[1]) == false){
+        std::cout << "El jugador " << tokens[1] << " no hace parte de esta partida." << std::endl;
     }else{
         std::cout << "El costo de conquistar el territorio " << tokens[2] << " desde para el jugador " << tokens[1] << " es de 5 unidades." << std::endl;
     }
@@ -187,6 +189,9 @@ void EjecutorConfig::conquistaMasBarata(EstadoJuego &estado, std::vector<std::st
         return;
     }else if(estado.terminado){
         std::cout << "El juego ya ha terminado." << std::endl;
+        return;
+    }else if(estado.existeJugador(tokens[1]) == false){
+        std::cout << "El jugador " << tokens[1] << " no hace parte de esta partida." << std::endl;
         return;
     }else{
         std::cout << "El territorio mas barato de conquistar para el jugador " << tokens[1] << " es el territorio XYZ con un costo de 3 unidades." << std::endl;
