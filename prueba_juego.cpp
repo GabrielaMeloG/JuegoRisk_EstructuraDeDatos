@@ -2,7 +2,7 @@
 #include "juego.h"
 #include "utilidades.h"
 
-int main() {
+/*int main() {
     // Probar tokenizar
     std::vector<std::string> tokens = tokenizar("atacar Ana");
     std::cout << "Tokens: ";
@@ -28,4 +28,4 @@ int main() {
     std::cout << "jugadorActual() = " << estado.jugadorActual() << std::endl;
 
     return 0;
-}
+}*/

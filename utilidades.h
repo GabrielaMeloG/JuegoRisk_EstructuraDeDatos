@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <cctype>
  
 inline std::vector<std::string> tokenizar(std::string linea) {
     std::vector<std::string> tokens;
@@ -22,6 +23,21 @@ int buscarIndicePorNombre(std::vector<T> contenedor, std::string nombre) {
         }
     }
     return -1;
+}
+
+inline std::string trim(std::string str) {
+    size_t start = str.find_first_not_of(" \t\n\r");
+    size_t end = str.find_last_not_of(" \t\n\r");
+    if (start == std::string::npos || end == std::string::npos) {
+        return "";
+    }
+    return str.substr(start, end - start + 1);
+}
+inline std::string pasarAMinusculas(std::string str) {
+    for (size_t i = 0; i < str.length(); i++) {
+        str[i] = std::tolower(str[i]);
+    }
+    return str;
 }
 
 #endif
