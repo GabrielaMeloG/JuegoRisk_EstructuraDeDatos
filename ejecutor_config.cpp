@@ -21,6 +21,7 @@ void EjecutorConfig::obtenerUnidades(EstadoJuego &estado, std::vector<std::strin
         std::cout << "Parametros no validos. 'ayuda obtener_unidades' para ver el uso correcto." << std::endl;
         return;
     }
+    int idJugador = estado.indiceJugador(tokens[1]);
     if(!estado.inicializado){
         std::cout << "El juego no ha sido inicializado aún." << std::endl;
         return;
@@ -33,8 +34,9 @@ void EjecutorConfig::obtenerUnidades(EstadoJuego &estado, std::vector<std::strin
     }else if(estado.jugadorActual() != tokens[1]){
         std::cout << "No es el turno del jugador " << tokens[1] << "." << std::endl;
         return;
-    }else{
+    }else{ 
         std::cout << "El jugador ha reclamado y ubicado todas sus unidades." << std::endl;
+        estado.jugadores[idJugador].obtenidoUnidades=true;
     }
 }
 void EjecutorConfig::atacar(EstadoJuego &estado, std::vector<std::string> &tokens){
@@ -60,6 +62,7 @@ void EjecutorConfig::atacar(EstadoJuego &estado, std::vector<std::string> &token
         return;
     }else{
         std::cout << "El jugador " << tokens[1] << " ha terminado de atacar." << std::endl;
+        estado.jugadores[idJugador].haAtacado=true;
     }
 }
 void EjecutorConfig::fortificar(EstadoJuego &estado, std::vector<std::string> &tokens){
