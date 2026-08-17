@@ -39,5 +39,17 @@ inline std::string pasarAMinusculas(std::string str) {
     }
     return str;
 }
-
+template <typename T>
+inline void agregarPrimeros2(std::vector<T> &vect1, std::vector<T> &vect2){
+    vect2.clear();
+    vect2.push_back(vect1[0]);
+    vect2.push_back(vect1[1]);
+}
+template <typename T>
+inline void agregarPrimeros3(std::vector<T> &vect1, std::vector<T> &vect2){
+    vect2.clear();
+    vect2.push_back(vect1[0]);
+    vect2.push_back(vect1[1]);
+    vect2.push_back(vect1[2]);
+}
 #endif
