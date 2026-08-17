@@ -180,7 +180,7 @@ void EjecutorConfig::costoConquista(EstadoJuego &estado, std::vector<std::string
     }else if(estado.existeJugador(tokens[1]) == false){
         std::cout << "El jugador " << tokens[1] << " no hace parte de esta partida." << std::endl;
     }else{
-        std::cout << "El costo de conquistar el territorio " << tokens[2] << " desde para el jugador " << tokens[1] << " es de 5 unidades." << std::endl;
+        std::cout << "Para conquistar el territorio "<< tokens[2] <<", "<<tokens[1]<<" debe atacar desde ABC , pasando por el territorio XYZ. Debe conquistar 7 unidades de ejército." << std::endl;
     }
 }
 void EjecutorConfig::conquistaMasBarata(EstadoJuego &estado, std::vector<std::string> &tokens){

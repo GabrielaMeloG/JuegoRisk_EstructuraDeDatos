@@ -8,8 +8,12 @@
 int main() {
     EjecutorConfig ejecutor;
     EstadoJuego estado;
+    Jugador gabriela;
+    gabriela.nombre="gabriela";
+    gabriela.color="naranja";
+    estado.turnos.push_front("gabriela");
+    estado.jugadores.push_back(gabriela);
     std::vector<std::string> tokens;
-    std::vector<std::string> lol;
     bool continuar = true;
     std::string comando;
     std::cout << "***********************************" << std::endl;
@@ -32,35 +36,26 @@ int main() {
         tokens[0] = pasarAMinusculas(tokens[0]);
         if (tokens[0] == "salir") {
             continuar = false;
-        } else if (tokens[0] == "ayuda") {
+        } else if (tokens[0] == "ayuda") { 
             ejecutor.ayuda(estado, tokens);
         } else if (tokens[0] == "inicializar") {
-            agregarPrimeros2(tokens, lol);
-            ejecutor.inicializarJuego(estado, lol);
+            ejecutor.inicializarJuego(estado, tokens);
         } else if (tokens[0] == "obtener_unidades") {
-            agregarPrimeros2(tokens, lol);
-            ejecutor.obtenerUnidades(estado, lol);
+            ejecutor.obtenerUnidades(estado, tokens);
         } else if (tokens[0] == "atacar") {
-            agregarPrimeros2(tokens, lol);
-            ejecutor.atacar(estado, lol);
+            ejecutor.atacar(estado, tokens);
         } else if (tokens[0] == "fortificar") {
-            agregarPrimeros2(tokens, lol);
-            ejecutor.fortificar(estado, lol);
+            ejecutor.fortificar(estado, tokens);
         } else if (tokens[0] == "estado_juego") {
-            agregarPrimeros2(tokens, lol);
-            ejecutor.estadoJuego(estado, lol);
+            ejecutor.estadoJuego(estado, tokens);
         }else if (tokens[0] == "guardar") {
-            agregarPrimeros2(tokens, lol);
-            ejecutor.guardar(estado, lol);
+            ejecutor.guardar(estado, tokens);
         }else if (tokens[0] == "guardar_comprimido") {
-            agregarPrimeros2(tokens, lol);
-            ejecutor.guardar_comprimido(estado, lol);
+            ejecutor.guardar_comprimido(estado, tokens);
         }else if (tokens[0] == "costo_conquista") {
-            agregarPrimeros3(tokens, lol);
-            ejecutor.costoConquista(estado, lol);
+            ejecutor.costoConquista(estado, tokens);
         }else if (tokens[0] == "conquista_mas_barata") {
-            agregarPrimeros2(tokens, lol);
-            ejecutor.conquistaMasBarata(estado, lol);
+            ejecutor.conquistaMasBarata(estado, tokens);
         }else {
             std::cout << "Comando no reconocido: " << tokens[0] << ". Escriba ayuda para ver la lista de comandos" << std::endl;
         }
