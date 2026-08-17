@@ -52,7 +52,7 @@ int main() {
         }else if (tokens[0] == "conquista_mas_barata") {
             ejecutor.conquistaMasBarata(estado, tokens);
         }else {
-            std::cout << "Comando no reconocido: " << tokens[0] << std::endl;
+            std::cout << "Comando no reconocido: " << tokens[0] << ". Escriba ayuda para ver la lista de comandos" << std::endl;
         }
     
     }

@@ -101,7 +101,8 @@ void EjecutorConfig::estadoJuego(EstadoJuego &estado, std::vector<std::string> &
     }else if(estado.terminado){
         std::cout << "El juego ya ha terminado." << std::endl;
         return;
-    
+    }else{
+        std::cout << "aqui va la respuesta xdddd" << std::endl;
     }
 }
 void EjecutorConfig::ayuda(EstadoJuego &estado, std::vector<std::string> &tokens){
