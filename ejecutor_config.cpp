@@ -1,20 +1,65 @@
 #include "ejecutor_config.h"
 #include "utilidades.h"
 #include <iostream>
+#include <fstream>
 
-void EjecutorConfig::inicializarJuego(EstadoJuego &estado, std::vector<std::string> &tokens){
+void EjecutorConfig::inicializarJuego(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero){
     if(tokens.size() != 2){
         std::cout << "Parametros no validos. 'ayuda inicializar' para ver el uso correcto." << std::endl;
         return;
     }
-    if(!estado.inicializado){
+    if(!estado.getInicializado()){
         std::cout << "Partida iniciada." << std::endl;
-        estado.inicializado = true;
+        estado.setInicializado(true);
         return;
     }else{
         std::cout << "El juego ya ha sido inicializado." << std::endl;
         return;
     }
+    
+    std::ifstream archivo(tokens[1]);
+    if(!archivo.is_open()) {
+        std::cout << "No se pudo abrir el archivo: " << tokens[1] << std::endl;
+        return;
+    }
+    if(archivo.peek() == std::ifstream::traits_type::eof()) {
+        std::cout << "El archivo esta vacio: " << tokens[1] << std::endl;
+        return;
+    }
+    int cantidadJugadores;
+    archivo >> cantidadJugadores;
+    if(cantidadJugadores < 3 || cantidadJugadores > 6){
+        std::cout << "Cantidad de jugadores no valida. Debe ser entre 3 y 6." << std::endl;
+    }
+    for(int i = 0 ; i < cantidadJugadores; i++){
+        std::string nombreJugador;
+        std::string colorJugador;
+        archivo >> nombreJugador >> colorJugador;
+        Jugador jugador = Jugador(nombreJugador, colorJugador);
+        std::vector<Jugador> jugadores = estado.getJugadores();
+        jugadores.push_back(jugador);
+    }
+    for(int i = 0 ; i < 42 ; i++){
+        std::string codigoTerritorio;
+        std::string colorOcupante;
+        int unidades;
+        archivo >> codigoTerritorio >> colorOcupante >> unidades;
+        std::vector<Continente> continentes = tablero.getContinentes();
+        std::vector<Continente>::iterator itContinente;
+        std::vector<Territorio>::iterator itTerritorio;
+        for(itContinente = continentes.begin(); itContinente != continentes.end();itContinente++){
+            std::vector<Territorio> territorios = itContinente->getTerritorios();
+            for(itTerritorio = territorios.begin(); itTerritorio != territorios.end(); itTerritorio++){
+                if(itTerritorio->getCodigo() == codigoTerritorio){
+                    itTerritorio->setColorOcupante(colorOcupante);
+                    itTerritorio->setUnidades(unidades);
+                }
+            }
+        }
+    }
+    archivo.close();
+    std::cout << "Partida iniciada." << std::endl;
+    return;
 }
 void EjecutorConfig::obtenerUnidades(EstadoJuego &estado, std::vector<std::string> &tokens){
     if(tokens.size() != 2){

@@ -18,7 +18,7 @@ inline std::vector<std::string> tokenizar(std::string linea) {
 template <typename T>
 int buscarIndicePorNombre(std::vector<T> contenedor, std::string nombre) {
     for (size_t i = 0; i < contenedor.size(); i++) {
-        if (contenedor[i].nombre == nombre) {
+        if (contenedor[i].getNombre() == nombre) {
             return i;
         }
     }

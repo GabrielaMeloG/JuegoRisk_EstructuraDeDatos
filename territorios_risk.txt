@@ -1,0 +1,48 @@
+Alaska 1.1 1.6, 1.2, 5.6, 5.10
+Alberta 1.2 1.1, 1.6, 1.7, 1.9
+AmericaCentral 1.3 1.9, 1.4, 2.4
+EstadosUnidosOrientales 1.4 1.7, 1.8, 1.9, 1.3, 1.5
+Groenlandia 1.5 1.6, 1.7, 1.4, 3.2
+TerritorioNoroccidental 1.6 1.1, 1.2, 1.7, 1.5
+Ontario 1.7 1.6, 1.2, 1.9, 1.8, 1.4, 1.5, 3.2
+Quebec 1.8 1.7, 1.4, 1.5, 3.1
+EstadosUnidosOccidentales 1.9 1.2, 1.7, 1.4, 1.3, 2.2
+AmericaDelNorte 1
+Argentina 2.1 2.2, 2.3
+Brasil 2.2 2.1, 2.3, 2.4, 4.6
+Peru 2.3 2.1, 2.2, 2.4
+Venezuela 2.4 2.2, 2.3, 1.3
+AmericaDelSur 2
+GranBretana 3.1 3.2, 3.3, 3.7, 1.8
+Islandia 3.2 1.5, 1.7, 3.1, 3.4
+EuropaDelNorte 3.3 3.1, 3.4, 3.5, 3.6, 3.7
+Escandinavia 3.4 3.2, 3.3, 3.6, 3.5
+EuropaDelSur 3.5 3.3, 3.4, 3.6, 3.7, 4.3, 4.5, 5.7
+Ucrania 3.6 3.3, 3.4, 3.5, 5.1, 5.2, 5.8, 5.10, 5.11
+EuropaOccidental 3.7 3.1, 3.3, 3.5, 4.5
+Europa 3
+Congo 4.1 4.2, 4.5, 4.6
+AfricaOriental 4.2 4.1, 4.3, 4.4, 4.6, 5.7
+Egipto 4.3 4.2, 4.5, 3.5, 5.7
+Madagascar 4.4 4.2, 4.6
+AfricaDelNorte 4.5 4.1, 4.3, 4.6, 3.5, 3.7
+AfricaDelSur 4.6 4.1, 4.2, 4.4, 2.2
+África 4
+Afghanistan 5.1 5.2, 5.3, 5.7, 5.8, 5.11, 3.6
+China 5.2 5.1, 5.3, 5.4, 5.6, 5.8, 5.10, 5.11
+India 5.3 5.1, 5.2, 5.7, 5.8, 5.9
+Irkutsk 5.4 5.2, 5.6, 5.8, 5.10, 5.12
+Japon 5.5 5.6, 5.8
+Kamchatka 5.6 1.1, 5.2, 5.4, 5.5, 5.8, 5.12
+MedioOriente 5.7 5.1, 5.3, 3.5, 4.2, 4.3, 5.8, 5.9
+Mongolia 5.8 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.9, 5.10
+Siam 5.9 5.3, 5.7, 5.8, 6.2, 6.3
+Siberia 5.10 5.2, 5.4, 5.6, 5.8, 5.11, 5.12
+Ural 5.11 5.1, 5.2, 5.10, 5.8, 3.6
+Yakutsk 5.12 5.4, 5.6, 5.10
+Asia 5
+AustraliaOriental 6.1 6.2, 6.3, 6.4
+Indonesia 6.2 5.9, 6.1, 6.3
+NuevaGuinea 6.3 5.9, 6.1, 6.4
+AustraliaOccidental 6.4 6.1, 6.3, 6.2
+Australia 6

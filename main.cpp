@@ -3,16 +3,12 @@
 #include "utilidades.h"
 #include <vector>
 #include "juego.h"
-#include "ejecutor_config.h"
+//#include "ejecutor_config.h"
 
 int main() {
-    EjecutorConfig ejecutor;
+    /*EjecutorConfig ejecutor;
     EstadoJuego estado;
     Jugador gabriela;
-    gabriela.nombre="gabriela";
-    gabriela.color="naranja";
-    estado.turnos.push_front("gabriela");
-    estado.jugadores.push_back(gabriela);
     std::vector<std::string> tokens;
     bool continuar = true;
     std::string comando;
@@ -61,6 +57,6 @@ int main() {
         }
     
     }
-    
+    */
     return 0;
 }
