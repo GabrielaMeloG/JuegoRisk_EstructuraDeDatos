@@ -15,6 +15,7 @@ class Territorio {
         std::vector<std::string> territoriosAdyacentes;
     public:
         Territorio(std::string nombre, std::string codigo, std::vector<std::string> adyacentes);
+        Territorio();
         std::string getCodigo();
         std::string getNombre();
         std::string getColorOcupante();
@@ -22,7 +23,8 @@ class Territorio {
         std::vector<std::string> getTerritoriosAdyacentes();
         void setColorOcupante(std::string color);
         void setUnidades(int cantidad);
-};
+        bool esAdyacente(std::string codigo);
+    };
 //TAD jugador 
 class Jugador {
     private:
@@ -32,15 +34,19 @@ class Jugador {
         bool haAtacado; 
         std::vector<Territorio> territoriosOcupados;
         int unidades;
-
+        std::vector<Carta> mano;
     public:
         Jugador(std::string nombre, std::string color);
         std::string getNombre();
         std::string getColor();
         bool getObtenidoUnidades();
         bool getHaAtacado();
+        void quitarCartas(int indices[3]);
         std::vector<Territorio> getTerritoriosOcupados();
+        bool poseeTerritorio(std::string codigo);
         int getUnidades();
+        std::vector<Carta>& getCartas();
+        void agregarCarta(Carta carta);
         void setObtenidoUnidades(bool estado);
         void setHaAtacado(bool estado);
         void agegarTerritorio(Territorio territorio);
@@ -66,25 +72,30 @@ class Tablero {
         int cantidadCartasEntregadas;
     public:
         Tablero();
+        int getCantidadCartasEntregadas();
+        void cartasEntregadas();
         std::vector<Continente> getContinentes();
         void agregarUnidadesTerritorio(std::string codigoTerritorio, int cantidad);
+        Territorio& getTerritorio(std::string codigoTerritorio);
 };
 class Carta {
     private:
         std::string codigoTerritorio;
         std::string dibujo;
         bool esComodin;
-        bool esMision;
     public:
         Carta(std::string id, std::string dibujo);
+        std::string getIdTerritorio();
+        std::string getDibujo();
+        bool getEsComodin();
         void setComodin(bool comodin);
-        void setMision(bool mision);
 };
 class Baraja {
     private:
         std::stack<Carta> cartas;
     public:
         Baraja();
+        Carta tomarCarta();
 };
 //TAD EstadoJuego
 class EstadoJuego {
@@ -96,11 +107,13 @@ class EstadoJuego {
         int turnoActual;
     public: 
         EstadoJuego();
-        std::vector<Jugador> getJugadores();
+        std::vector<Jugador>& getJugadores();
         void setInicializado(bool estado);
         void setTerminado(bool estado);
         void setTurno(int turno);
         int getTurno();
+        bool compararCartas(Jugador jugador, int indices[3]);
+        int getUnidadesPorCartas(Tablero tablero);
         void siguienteTurno(int cantidadJugadores);
         bool getInicializado();
         bool getTerminado();
@@ -110,6 +123,7 @@ class EstadoJuego {
         void siguienteTurno();
         bool existeTerritorio(std::string codigo, Tablero tablero);
         void reiniciar();
+        bool compararDados(int dadosAtacante[3], int dadosDefensor[2]);
 };
 
 #endif

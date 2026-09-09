@@ -2,8 +2,10 @@
 #include "utilidades.h"
 #include <iostream>
 #include <fstream>
+#include <cstdlib> 
+#include <ctime> 
 
-void EjecutorConfig::inicializarJuego(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero){
+void EjecutorConfig::inicializarJuego(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero, Baraja &baraja){
     if(tokens.size() != 2){
         std::cout << "Parametros no validos. 'ayuda inicializar' para ver el uso correcto." << std::endl;
         return;
@@ -108,10 +110,17 @@ void EjecutorConfig::inicializarJuego(EstadoJuego &estado, std::vector<std::stri
             break;
     }
     archivo.close();
+    std::vector<Jugador>::iterator itJugador;
+    for(itJugador = estado.getJugadores().begin(); itJugador != estado.getJugadores().end(); itJugador++){
+        for(int i = 0; i < 3; i++){
+            Carta carta = baraja.tomarCarta();
+            itJugador->agregarCarta(carta);
+        }
+    }
     std::cout << "Partida iniciada." << std::endl;
     return;
 }
-void EjecutorConfig::obtenerUnidades(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero){
+void EjecutorConfig::obtenerUnidades(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero, Baraja &baraja){
     if(tokens.size() != 2){
         std::cout << "Parametros no validos. 'ayuda obtener_unidades' para ver el uso correcto." << std::endl;
         return;
@@ -138,6 +147,55 @@ void EjecutorConfig::obtenerUnidades(EstadoJuego &estado, std::vector<std::strin
         }else{
             std::cout<< "El jugador " << tokens[1] << " ha reclamado " << unidadesAgregadas << " unidades." << std::endl;
         }
+        if(jugadores[estado.getTurno()].getCartas().size() >= 3){
+            std::cout << "Desea utilizar cartas para obtener unidades adicionales? (si/no)" << std::endl;
+            std::string respuesta;
+            std::cin >> respuesta;
+            if(trim(respuesta) == "si"){
+                do{ 
+                std::vector<Jugador> jugadores = estado.getJugadores();
+                Jugador jugador = jugadores[estado.getTurno()];
+                std::vector<Carta> cartasJugador = jugador.getCartas();
+                std::cout << "Cartas disponibles:" << std::endl;
+                for(int i = 0; i < cartasJugador.size(); i++){
+                    std::cout << i+1 << ". Codigo: " << cartasJugador[i].getIdTerritorio() << ", Dibujo: " << cartasJugador[i].getDibujo() << std::endl;
+                }
+                std::cout << "Ingrese los numeros de las cartas que desea utilizar (separados por espacio):" << std::endl;
+                std::string linea;
+                std::getline(std::cin, linea);
+                std::vector<std::string> tokensCartas = tokenizar(linea);
+                if(tokensCartas.size() != 3){
+                    std::cout << "Solo puede seleccionar 3 cartas." << std::endl;
+                    return;
+                }
+                int indices[3];
+                for(int i = 0; i < 3; i++){
+                    indices[i] = std::stoi(tokensCartas[i]) - 1;
+                    if(indices[i] < 0 || indices[i] >= cartasJugador.size()){
+                        std::cout << "Indice de carta no valido: " << tokensCartas[i] << std::endl;
+                        return;
+                    }
+                }
+                if(estado.compararCartas(jugador, indices)){
+                    unidadesAgregadas += estado.getUnidadesPorCartas(tablero);
+                    jugador.quitarCartas(indices);
+                    if(jugador.poseeTerritorio(cartasJugador[indices[0]].getIdTerritorio())){
+                        unidadesAgregadas += 2;
+                    }else if(jugador.poseeTerritorio(cartasJugador[indices[1]].getIdTerritorio())){
+                        unidadesAgregadas += 2;
+                    }else if(jugador.poseeTerritorio(cartasJugador[indices[2]].getIdTerritorio())){
+                        unidadesAgregadas += 2;
+                    }
+                    std::cout << "Se han utilizado las cartas para obtener " << estado.getUnidadesPorCartas(tablero) << " unidades adicionales." << std::endl;
+                }else{
+                    std::cout << "Las cartas seleccionadas no son validas para obtener unidades adicionales." << std::endl;
+                }
+                std::cout << "Desea utilizar mas cartas? (si/no)" << std::endl;
+                std::cin >> respuesta;
+            }while(respuesta != "no"); 
+            }
+        }
+        
         while(unidadesAgregadas > 0){
             int cantidad;
             std::string linea;
@@ -182,12 +240,12 @@ void EjecutorConfig::obtenerUnidades(EstadoJuego &estado, std::vector<std::strin
         jugadores[estado.getTurno()].setObtenidoUnidades(true);
     }
 }
-void EjecutorConfig::atacar(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero){
+void EjecutorConfig::atacar(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero, Baraja &baraja){
     if(tokens.size() != 2){
         std::cout << "Parametros no validos. 'ayuda atacar' para ver el uso correcto." << std::endl;
         return;
     }
-    int idJugador = estado.indiceJugador(tokens[1]);
+    std::vector<Jugador> jugadores = estado.getJugadores();
     if(!estado.getInicializado()){
         std::cout << "El juego no ha sido inicializado." << std::endl;
         return;
@@ -197,23 +255,99 @@ void EjecutorConfig::atacar(EstadoJuego &estado, std::vector<std::string> &token
     }else if(estado.existeJugador(tokens[1]) == false){
         std::cout << "El jugador " << tokens[1] << " no hace parte de esta partida." << std::endl;
         return;
-    }else if(estado.jugadorActual() != tokens[1]){
+    }else if(estado.getTurno() != estado.indiceJugador(tokens[1])){
         std::cout << "No es el turno del jugador " << tokens[1] << "." << std::endl;
         return;
-    }else if(estado.jugadores[idJugador].obtenidoUnidades == false){
+    }else if(!jugadores[estado.getTurno()].getObtenidoUnidades()){
         std::cout << "El jugador " << tokens[1] << " no ha reclamado y ubicado todas sus unidades." << std::endl;
         return;
     }else{
-        std::cout << "El jugador " << tokens[1] << " ha terminado de atacar." << std::endl;
-        estado.jugadores[idJugador].haAtacado=true;
+        std::string territorioId;
+        std::string respuesta;
+        do{ 
+        std::cout << "Desde que territorio desea atacar? (Ingrese el codigo del territorio)" << std::endl;
+        std::cin >> territorioId;
+        if(jugadores[estado.getTurno()].poseeTerritorio(territorioId)){
+            std::vector<Territorio> territorios = jugadores[estado.getTurno()].getTerritoriosOcupados();
+            std::vector<Territorio>::iterator it;
+            int unidades;
+            Territorio territorioAtacante = Territorio();
+            for(it = territorios.begin();it!=territorios.end();it++){
+                if(it->getCodigo()==territorioId){
+                    unidades = it->getUnidades();
+                    territorioAtacante = *it;
+                    if(unidades == 1){
+                        std::cout <<"El territorio seleccionado no tiene suficientes unidades para atacar"<<std::endl;
+                    }
+                }
+            }
+        std::cout << "Que territorio desea atacar? (Ingrese el codigo del territorio)" << std::endl;
+        std::cin >> territorioId;
+        Territorio territorioDefensor = tablero.getTerritorio(territorioId);
+        if(jugadores[estado.getTurno()].poseeTerritorio(territorioId)){
+            std::cout << " no se puede atacar un territorio que ya esta conquistado" << std::endl;
+            continue;
+        }else if(territorioAtacante.esAdyacente(territorioId)){
+            int dadosAtacante[3];
+            int dadosDefensor[2];
+            for(int i = 0 ; i < 3; i++){
+                srand(time(0));
+                dadosAtacante[i] = std::rand() % 6 + 1;
+            }
+            for(int i = 0 ; i < 2; i++){
+                srand(time(0));
+                dadosDefensor[i] = std::rand() % 6 + 1;
+            }
+            bool ganadorAtacante = estado.compararDados(dadosAtacante, dadosDefensor);
+            if(ganadorAtacante){
+                territorioDefensor.setUnidades(territorioDefensor.getUnidades()-1);
+                if(territorioDefensor.getUnidades()==0){
+                    
+                    std::cout << "El territorio " << territorioDefensor.getNombre() << " ha sido conquistado por " << tokens[1] << std::endl;
+                    int cantidad;
+                    do{
+                    std::cout << "Cuantas unidades desea mover a ese territorio?"<<std::endl;
+                    std::cin>>cantidad;
+                    }while(cantidad < territorioAtacante.getUnidades());
+                    Jugador defensor = Jugador(" ", " "); 
+                    for(Jugador j : jugadores){
+                        if(territorioDefensor.getColorOcupante() == j.getColor()){
+                            defensor = j;
+                        }
+                    }
+                    defensor.eliminarTerritorio(territorioDefensor.getCodigo());
+                    territorioDefensor.setColorOcupante(jugadores[estado.getTurno()].getColor());
+                    territorioDefensor.setUnidades(territorioDefensor.getUnidades()+cantidad);
+                    territorioAtacante.setUnidades(territorioAtacante.getUnidades()-cantidad);
+                    jugadores[estado.getTurno()].agegarTerritorio(territorioDefensor);
+                    break;
+                }
+            }else{
+                territorioAtacante.setUnidades(territorioAtacante.getUnidades()-1);
+                if(territorioAtacante.getUnidades()==1){
+                    std::cout << "El territorio " << territorioDefensor.getNombre() << " ya no puede atacar mas al quedarse con solo 1 unidad" << std::endl;
+                    break;
+                }
+            }
+
+        }else{
+            std::cout << "El territorio seleccionado no es adyacente al territorio atacante"<<std::endl;
+            continue;
+        }    
+        }else{
+            std::cout << "El jugador " << tokens[1] << " no es dueño de este territorio" << std::endl;
+        }
+        std::cout << "Desea seguir atacando? (si/no)" << std::endl;
+        std::cin >> respuesta;
+        }while(trim(respuesta) != "no");
     }
 }
-void EjecutorConfig::fortificar(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero){
+void EjecutorConfig::fortificar(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero, Baraja &baraja){
     if(tokens.size() != 2){
         std::cout << "Parametros no validos. 'ayuda fortificar' para ver el uso correcto." << std::endl;
         return;
     }
-    int idJugador = estado.indiceJugador(tokens[1]);
+    std::vector<Jugador> jugadores = estado.getJugadores();
     if(!estado.getInicializado()){
         std::cout << "El juego no ha sido inicializado." << std::endl;
         return;
@@ -223,17 +357,17 @@ void EjecutorConfig::fortificar(EstadoJuego &estado, std::vector<std::string> &t
     }else if(estado.existeJugador(tokens[1]) == false){
         std::cout << "El jugador " << tokens[1] << " no hace parte de esta partida." << std::endl;
         return;
-    }else if(estado.jugadorActual() != tokens[1]){
+    }else if(estado.getTurno() != estado.indiceJugador(tokens[1])){
         std::cout << "No es el turno del jugador " << tokens[1] << "." << std::endl;
         return;
-    }else if(estado.jugadores[idJugador].haAtacado == false){
+    }else if(!jugadores[estado.getTurno()].getHaAtacado()){
         std::cout << "El jugador " << tokens[1] << " no ha atacado." << std::endl;
         return;
     }else{
         std::cout << "El jugador " << tokens[1] << " ha terminado de fortificar su posicion." << std::endl;
     }
 }
-void EjecutorConfig::estadoJuego(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero){
+void EjecutorConfig::estadoJuego(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero, Baraja &baraja){
     if(tokens.size() != 1){
         std::cout << "Parametros no validos. 'ayuda estado_juego' para ver el uso correcto." << std::endl;
         return;
@@ -248,7 +382,7 @@ void EjecutorConfig::estadoJuego(EstadoJuego &estado, std::vector<std::string> &
         std::cout << "aqui va la respuesta xdddd" << std::endl;
     }
 }
-void EjecutorConfig::ayuda(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero){
+void EjecutorConfig::ayuda(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero, Baraja &baraja){
     if(tokens.size() > 2){
         std::cout << "Comando incorrecto. ayuda [comando] para ver uso correcto de cualquier comando." << std::endl;
         return;
@@ -285,7 +419,7 @@ void EjecutorConfig::ayuda(EstadoJuego &estado, std::vector<std::string> &tokens
         }
     }
 }
-void EjecutorConfig::guardar(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero){
+void EjecutorConfig::guardar(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero, Baraja &baraja){
     if(tokens.size() != 2){
         std::cout << "Parametros no validos. 'ayuda guardar' para ver el uso correcto." << std::endl;
         return;
@@ -297,7 +431,7 @@ void EjecutorConfig::guardar(EstadoJuego &estado, std::vector<std::string> &toke
         std::cout << "El juego ha sido guardado en el archivo " << tokens[1] << "." << std::endl;
     }
 }
-void EjecutorConfig::guardar_comprimido(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero){
+void EjecutorConfig::guardar_comprimido(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero, Baraja &baraja){
     if(tokens.size() != 2){
         std::cout << "Parametros no validos. 'ayuda guardar_comprimido' para ver el uso correcto." << std::endl;
         return;
@@ -309,7 +443,7 @@ void EjecutorConfig::guardar_comprimido(EstadoJuego &estado, std::vector<std::st
         std::cout << "El juego ha sido guardado en el archivo " << tokens[1] << "." << std::endl;
     }
 }
-void EjecutorConfig::costoConquista(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero){
+void EjecutorConfig::costoConquista(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero, Baraja &baraja){
     if(tokens.size() != 3){
         std::cout << "Parametros no validos. 'ayuda costo_conquista' para ver el uso correcto." << std::endl;
         return;
@@ -326,7 +460,7 @@ void EjecutorConfig::costoConquista(EstadoJuego &estado, std::vector<std::string
         std::cout << "Para conquistar el territorio "<< tokens[2] <<", "<<tokens[1]<<" debe atacar desde ABC , pasando por el territorio XYZ. Debe conquistar 7 unidades de ejército." << std::endl;
     }
 }
-void EjecutorConfig::conquistaMasBarata(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero){
+void EjecutorConfig::conquistaMasBarata(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero, Baraja &baraja){
     if(tokens.size() != 2){
         std::cout << "Parametros no validos. 'ayuda conquista_mas_barata' para ver el uso correcto." << std::endl;
         return;

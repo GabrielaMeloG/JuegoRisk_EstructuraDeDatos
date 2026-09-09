@@ -131,7 +131,7 @@ Jugador::Jugador(std::string nombre, std::string color) {
     obtenidoUnidades = false;
     haAtacado = false;
 }
-std::vector<Jugador> EstadoJuego::getJugadores(){
+std::vector<Jugador>& EstadoJuego::getJugadores(){
     return jugadores;
 }
 void Territorio::setColorOcupante(std::string color) {
@@ -144,13 +144,9 @@ Carta::Carta(std::string id, std::string dibujo){
     codigoTerritorio = id;
     this->dibujo = dibujo;
     esComodin = false;
-    esMision = false;
 }
 void Carta::setComodin(bool comodin) {
     esComodin = comodin;
-}
-void Carta::setMision(bool mision) {
-    esMision = mision;
 }
 Baraja::Baraja() {
     std::ifstream archivo("cartas.txt");
@@ -167,11 +163,7 @@ Baraja::Baraja() {
             Carta carta(codigoTerritorio, dibujo);
             carta.setComodin(true);
             cartasOrdenadas.push_back(carta);
-        } else if(codigoTerritorio == "0") {
-            Carta carta(codigoTerritorio, dibujo);
-            carta.setMision(true);
-            cartasOrdenadas.push_back(carta);
-        } else {
+        }else{
         Carta carta(codigoTerritorio, dibujo);
         cartasOrdenadas.push_back(carta);
         }
@@ -260,3 +252,145 @@ void Tablero::agregarUnidadesTerritorio(std::string codigoTerritorio, int cantid
         }
     }
 }
+void Jugador::agregarCarta(Carta carta) {
+    mano.push_back(carta);
+}
+Carta Baraja::tomarCarta() {
+    Carta carta = cartas.top();
+    cartas.pop();
+    return carta;
+}
+std::vector<Carta>& Jugador::getCartas() {
+    return mano;
+}
+std::string Carta::getIdTerritorio() {
+    return codigoTerritorio;
+}
+std::string Carta::getDibujo() {
+    return dibujo;
+}
+bool Carta::getEsComodin() {
+    return esComodin;
+}
+int Tablero::getCantidadCartasEntregadas() {
+    return cantidadCartasEntregadas;
+}
+void Tablero::cartasEntregadas() {
+    cantidadCartasEntregadas++;
+}
+int EstadoJuego::getUnidadesPorCartas(Tablero tablero) {
+    switch (tablero.getCantidadCartasEntregadas()) {
+        case 0:
+            tablero.cartasEntregadas();
+            return 4;
+        case 1:
+            tablero.cartasEntregadas();
+            return 6;
+        case 2:
+            tablero.cartasEntregadas();
+            return 8;
+        case 3:
+            tablero.cartasEntregadas();
+            return 10;
+        case 4:
+            tablero.cartasEntregadas();
+            return 12;
+        case 5:
+            tablero.cartasEntregadas();
+            return 15;
+        case 6:
+            tablero.cartasEntregadas();
+            return 20;
+        default:
+            tablero.cartasEntregadas();
+            return 15 + (tablero.getCantidadCartasEntregadas() - 6) * 5;
+    }
+}
+bool Jugador::poseeTerritorio(std::string codigo) {
+    std::vector<Territorio>::iterator it;
+    for(it = territoriosOcupados.begin(); it != territoriosOcupados.end(); ++it) {
+        if(it->getCodigo() == codigo) {
+            return true;
+        }
+    }
+    return false;
+}
+bool compararCartas(Jugador jugador, int indices[3]){
+    std::vector<Carta> cartas = jugador.getCartas();
+    if(cartas[indices[0]].getDibujo() == cartas[indices[1]].getDibujo() && cartas[indices[1]].getDibujo() == cartas[indices[2]].getDibujo()){
+        return true;
+    }else if(cartas[indices[0]].getDibujo() == "Comodin" && cartas[indices[1]].getDibujo() == cartas[indices[2]].getDibujo()){
+        return true;
+    }else if(cartas[indices[1]].getDibujo() == "Comodin" && cartas[indices[0]].getDibujo() == cartas[indices[2]].getDibujo()){
+        return true;
+    }else if(cartas[indices[2]].getDibujo() == "Comodin" && cartas[indices[0]].getDibujo() == cartas[indices[1]].getDibujo()){
+        return true;
+    }else if(cartas[indices[0]].getDibujo() == "Comodin" && cartas[indices[1]].getDibujo() == "Comodin"){
+        return true;
+    }else if(cartas[indices[0]].getDibujo() == "Comodin" && cartas[indices[2]].getDibujo() == "Comodin"){
+        return true;
+    }else if(cartas[indices[1]].getDibujo() == "Comodin" && cartas[indices[2]].getDibujo() == "Comodin"){
+        return true;
+    }else{
+        return false;
+    }
+}
+void Jugador::quitarCartas(int indices[3]) {
+    std::vector<Carta> nuevasCartas;
+    for(int i = 0; i < mano.size(); i++) {
+        if(i != indices[0] && i != indices[1] && i != indices[2]) {
+            nuevasCartas.push_back(mano[i]);
+        }
+    }
+    mano = nuevasCartas;
+}
+Territorio::Territorio(){
+    this->nombre = " ";
+    codigo = " ";
+}
+ bool Territorio::esAdyacente(std::string codigo){
+    std::vector<std::string>::iterator it;
+    for(it = territoriosAdyacentes.begin(); it != territoriosAdyacentes.end(); ++it) {
+        if(*it == codigo) {
+            return true;
+        }
+    }
+    return false;
+ }
+Territorio& Tablero::getTerritorio(std::string codigoTerritorio){
+    std::vector<Continente>::iterator itContinente;
+    std::vector<Territorio>::iterator itTerritorio;
+    for(itContinente = continentes.begin(); itContinente != continentes.end(); itContinente++){
+        std::vector<Territorio> territorios = itContinente->getTerritorios();
+        for(itTerritorio = territorios.begin(); itTerritorio != territorios.end(); itTerritorio++){
+            if(itTerritorio->getCodigo() == codigoTerritorio){
+                return *itTerritorio;
+            }
+        }
+    }
+}
+bool compararDados(int dadosAtacante[3], int dadosDefensor[2]){
+    int dadosUsados[2] = {0, 0};
+    for(int i = 0; i < 3 ; i++){
+        if(dadosAtacante[i] >= dadosUsados[0]){
+            dadosUsados[0]= dadosAtacante[i];
+        }else if(dadosAtacante[i] >= dadosUsados[1]){
+            dadosUsados[1] = dadosAtacante[i];
+        }
+    }
+    int perdidasAtacante = 0;
+    int perdidasDefensor = 0;
+    for(int i = 0 ; i < 2 ; i++){
+        if(dadosUsados[i] <= dadosDefensor[i]){
+            perdidasAtacante++;
+        }else{
+            perdidasDefensor++;
+        }
+    }
+    if(perdidasAtacante < perdidasDefensor){
+        return true;
+    }else{
+        return false;
+    }
+}
+
