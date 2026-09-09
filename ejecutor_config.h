@@ -6,15 +6,15 @@
 
 class EjecutorConfig {
     public:
-        void inicializarJuego(EstadoJuego &estado, std::vector<std::string> &tokens);
-        void obtenerUnidades(EstadoJuego &estado, std::vector<std::string> &tokens);
-        void atacar(EstadoJuego &estado, std::vector<std::string> &tokens);
-        void fortificar(EstadoJuego &estado, std::vector<std::string> &tokens);
-        void estadoJuego(EstadoJuego &estado, std::vector<std::string> &tokens);
-        void ayuda(EstadoJuego &estado, std::vector<std::string> &tokens);
-        void guardar(EstadoJuego &estado, std::vector<std::string> &tokens);
-        void guardar_comprimido(EstadoJuego &estado, std::vector<std::string> &tokens);
-        void costoConquista(EstadoJuego &estado, std::vector<std::string> &tokens);
-        void conquistaMasBarata(EstadoJuego &estado, std::vector<std::string> &tokens);
+        void inicializarJuego(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero);
+        void obtenerUnidades(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero);
+        void atacar(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero);
+        void fortificar(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero);
+        void estadoJuego(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero);
+        void ayuda(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero);
+        void guardar(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero);
+        void guardar_comprimido(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero);
+        void costoConquista(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero);
+        void conquistaMasBarata(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero);
 };
 #endif

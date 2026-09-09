@@ -4,6 +4,9 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include <algorithm>
+#include <random>
+
 EstadoJuego::EstadoJuego() {
  reiniciar();
 }
@@ -12,7 +15,6 @@ void EstadoJuego::reiniciar() {
     inicializado = false;
     terminado = false;
     jugadores.clear();
-    territorios.clear();
     turnos.clear();
 }
 
@@ -31,13 +33,6 @@ bool EstadoJuego::esTurnoDe(std::string nombre) {
     return turnos.front() == nombre;
 }
 
-std ::string EstadoJuego::jugadorActual() {
-    if (turnos.empty()) {
-        return "";
-    }
-    return turnos.front();
-}
-
 void EstadoJuego::siguienteTurno() {
     if (!turnos.empty()) {
         std::string jugadorActual = turnos.front();
@@ -48,13 +43,17 @@ void EstadoJuego::siguienteTurno() {
 std::string Territorio::getCodigo() {
     return codigo;
 }
-int EstadoJuego::indiceTerritorio(std::string codigo) {
-    for (size_t i = 0; i < territorios.size(); i++) {
-        if (territorios[i].getCodigo() == codigo) {
-            return i;
+bool EstadoJuego::existeTerritorio(std::string codigo, Tablero tablero) {
+    std::vector<Continente> continentes = tablero.getContinentes();
+    for (size_t i = 0; i < continentes.size(); i++) {
+        std::vector<Territorio> territorios = continentes[i].getTerritorios();
+        for (size_t j = 0; j < territorios.size(); j++) {
+            if (territorios[j].getCodigo() == codigo) {
+                return true;
+            }
         }
     }
-    return -1;
+    return false;
 }
 void EstadoJuego::setInicializado(bool estado) {
     inicializado = estado;
@@ -160,7 +159,7 @@ Baraja::Baraja() {
         return;
     }
     std::vector<Carta> cartasOrdenadas;
-    for(int i = 0; i < 56; i++) {
+    for(int i = 0; i < 44; i++) {
         std::string codigoTerritorio;
         std::string dibujo;
         archivo >> codigoTerritorio >> dibujo;
@@ -177,7 +176,87 @@ Baraja::Baraja() {
         cartasOrdenadas.push_back(carta);
         }
     }
-    for(int i = 0; i < 56; i++) {
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(cartasOrdenadas.begin(), cartasOrdenadas.end(), g);
+
+    for(int i = 0; i < 44; i++) {
         cartas.push(cartasOrdenadas[i]);
+    }
+}
+void Jugador::agegarTerritorio(Territorio territorio) {
+    territoriosOcupados.push_back(territorio);
+}
+void Jugador::agregarUnidades(int cantidad) {
+    unidades += cantidad;
+}
+void Jugador::eliminarUnidades(int cantidad) {
+    unidades -= cantidad;
+}
+void Jugador::eliminarTerritorio(std::string codigo) {
+    std::vector<Territorio>::iterator it;
+    for(it = territoriosOcupados.begin(); it != territoriosOcupados.end(); ++it) {
+        if(it->getCodigo() == codigo) {
+            territoriosOcupados.erase(it);
+            break;
+        }else{
+            std::cout << "El jugador no posee el territorio con codigo: " << codigo << std::endl;
+        }
+    }
+}
+std::string Jugador::getColor() {
+    return color;
+}
+bool Jugador::getObtenidoUnidades() {
+    return obtenidoUnidades;
+}
+bool Jugador::getHaAtacado() {
+    return haAtacado;
+}
+std::vector<Territorio> Jugador::getTerritoriosOcupados() {
+    return territoriosOcupados;
+}
+int Jugador::getUnidades() {
+    return unidades;
+}
+void Jugador::setObtenidoUnidades(bool estado) {
+    obtenidoUnidades = estado;
+}
+void Jugador::setHaAtacado(bool estado) {
+    haAtacado = estado;
+}
+std::string Territorio::getColorOcupante() {
+    return colorOcupante;
+}
+int Territorio::getUnidades() {
+    return unidades;
+}
+std::vector<std::string> Territorio::getTerritoriosAdyacentes() {
+    return territoriosAdyacentes;
+}
+void EstadoJuego::siguienteTurno(int cantidadJugadores) {
+    if(turnoActual == cantidadJugadores - 1) {
+        turnoActual = 0;
+    } else {
+        turnoActual++;
+    }
+}
+void EstadoJuego::setTurno(int turno) {
+    turnoActual = turno;
+}
+int EstadoJuego::getTurno() {
+    return turnoActual;
+}
+void Tablero::agregarUnidadesTerritorio(std::string codigoTerritorio, int cantidad){
+    std::vector<Continente>::iterator itContinente;
+    std::vector<Territorio>::iterator itTerritorio;
+    for(itContinente = continentes.begin(); itContinente != continentes.end(); itContinente++){
+        std::vector<Territorio> territorios = itContinente->getTerritorios();
+        for(itTerritorio = territorios.begin(); itTerritorio != territorios.end(); itTerritorio++){
+            if(itTerritorio->getCodigo() == codigoTerritorio){
+                itTerritorio->setUnidades(itTerritorio->getUnidades() + cantidad);
+                return;
+            }
+        }
     }
 }

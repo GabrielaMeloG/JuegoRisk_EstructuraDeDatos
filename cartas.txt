@@ -42,15 +42,3 @@
 42 6.4 Artilleria
 43 1 Comodin
 44 1 Comodin
-45 0 Mision
-46 0 Mision
-47 0 Mision
-48 0 Mision
-49 0 Mision
-50 0 Mision
-51 0 Mision
-52 0 Mision
-53 0 Mision
-54 0 Mision
-55 0 Mision
-56 0 Mision

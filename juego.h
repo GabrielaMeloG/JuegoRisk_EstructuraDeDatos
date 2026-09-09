@@ -5,19 +5,6 @@
 #include <deque>
 #include <stack>
 
-//TAD jugador 
-class Jugador {
-    private:
-        std::string nombre;
-        std::string color;
-        bool obtenidoUnidades;
-        bool haAtacado; 
-    public:
-        Jugador(std::string nombre, std::string color);
-        std::string getNombre();
-
-};
-
 //TAD territorio
 class Territorio {
     private:
@@ -30,8 +17,37 @@ class Territorio {
         Territorio(std::string nombre, std::string codigo, std::vector<std::string> adyacentes);
         std::string getCodigo();
         std::string getNombre();
+        std::string getColorOcupante();
+        int getUnidades();
+        std::vector<std::string> getTerritoriosAdyacentes();
         void setColorOcupante(std::string color);
         void setUnidades(int cantidad);
+};
+//TAD jugador 
+class Jugador {
+    private:
+        std::string nombre;
+        std::string color;
+        bool obtenidoUnidades;
+        bool haAtacado; 
+        std::vector<Territorio> territoriosOcupados;
+        int unidades;
+
+    public:
+        Jugador(std::string nombre, std::string color);
+        std::string getNombre();
+        std::string getColor();
+        bool getObtenidoUnidades();
+        bool getHaAtacado();
+        std::vector<Territorio> getTerritoriosOcupados();
+        int getUnidades();
+        void setObtenidoUnidades(bool estado);
+        void setHaAtacado(bool estado);
+        void agegarTerritorio(Territorio territorio);
+        void agregarUnidades(int cantidad);
+        void eliminarUnidades(int cantidad);
+        void eliminarTerritorio(std::string codigo);
+
 };
 class Continente {
     private:
@@ -51,6 +67,7 @@ class Tablero {
     public:
         Tablero();
         std::vector<Continente> getContinentes();
+        void agregarUnidadesTerritorio(std::string codigoTerritorio, int cantidad);
 };
 class Carta {
     private:
@@ -69,34 +86,30 @@ class Baraja {
     public:
         Baraja();
 };
-class Juego {
-    private:
-    public:
-        Juego();
-};
 //TAD EstadoJuego
 class EstadoJuego {
     private:
         bool inicializado;
         bool terminado;
         std::vector<Jugador> jugadores;
-        std::vector<Territorio> territorios;
         std::deque<std::string> turnos;
+        int turnoActual;
     public: 
         EstadoJuego();
         std::vector<Jugador> getJugadores();
         void setInicializado(bool estado);
         void setTerminado(bool estado);
+        void setTurno(int turno);
+        int getTurno();
+        void siguienteTurno(int cantidadJugadores);
         bool getInicializado();
         bool getTerminado();
         bool existeJugador(std::string nombre);
         int indiceJugador(std::string nombre);
         bool esTurnoDe(std::string nombre);
-        std::string jugadorActual();
         void siguienteTurno();
-        int indiceTerritorio(std::string codigo);
+        bool existeTerritorio(std::string codigo, Tablero tablero);
         void reiniciar();
-        
 };
 
 #endif
