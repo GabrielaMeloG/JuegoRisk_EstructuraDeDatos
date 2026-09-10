@@ -90,8 +90,8 @@ class Tablero {
         std::vector<Continente>& getContinentes();
         void agregarUnidadesTerritorio(std::string codigoTerritorio, int cantidad);
         Territorio& getTerritorio(std::string codigoTerritorio);
-        bool existeTerritorioEnMapa(std::string codigoTerritorio);
-        bool todosLosTerritoriosCubiertos(std::vector<std::string>& codigoTerritorio);
+        bool existeTerritorioEnMapa(std::string codigoTerritorio); //esta funcion viene junto con la de verificar estructura pero esta no estaba implementada por lo que claude solamente nos dio la firma
+        bool todosLosTerritoriosCubiertos(std::vector<std::string>& codigoTerritorio);//esta funcion viene junto con la de verificar estructura pero esta no estaba implementada por lo que claude solamente nos dio la firma
 };
 class Baraja {
     private:
@@ -127,6 +127,7 @@ class EstadoJuego {
         bool compararDados(int dadosAtacante[3], int dadosDefensor[2]);
         bool Victoria(Jugador jugador);
         int calcularBonoContinentes(Jugador jugador, Tablero tablero);
+        void mostrarCodigosYNombres(Tablero& tablero);
 };
 
 #endif

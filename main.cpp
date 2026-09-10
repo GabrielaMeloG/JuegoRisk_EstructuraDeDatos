@@ -23,7 +23,6 @@ int main() {
     std::cout << "*  ver el llamado de un comando   *" << std::endl;
     std::cout << "***********************************" << std::endl;
     while (continuar) {
-        
         std::cout << "$";   
         std::getline(std::cin, comando);
         comando = trim(comando);

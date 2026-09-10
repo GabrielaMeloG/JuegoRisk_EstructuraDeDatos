@@ -4,7 +4,7 @@
 #include <fstream>
 #include <vector>
 #include <string>
-#include <algorithm>
+#include <algorithm>//Esta libreria esta para revolver la baraja de cartas, esa libreria nos la explico la ia, luego se investigo un poco mas sobre la funcion que se estaba utilizando especificamente
 #include <random>
 
 EstadoJuego::EstadoJuego() {
@@ -153,7 +153,7 @@ Baraja::Baraja() {
         cartasOrdenadas.push_back(carta);
         }
     }
-    std::random_device rd;
+    std::random_device rd; //para esta parte se utilizo la libreria algorithm
     std::mt19937 g(rd());
     std::shuffle(cartasOrdenadas.begin(), cartasOrdenadas.end(), g);
 
@@ -415,45 +415,52 @@ int EstadoJuego::calcularBonoContinentes(Jugador jugador, Tablero tablero) {
     }
     return unidadesExtras;
 }
-bool Tablero::existeTerritorioEnMapa(std::string codigo) {
-    for (Continente& continente : continentes) {
-        std::vector<Territorio>& territorios = continente.getTerritorios();
-        for (Territorio& t : territorios) {
-            if (t.getCodigo() == codigo) {
+bool Tablero::existeTerritorioEnMapa(std::string codigo) { // implementacion funcion utilizada en validar estructura a partir de la explicacion de claude
+    std::vector<Continente>::iterator itContinente;
+    std::vector<Territorio>::iterator itTerritorio;
+    for (itContinente = continentes.begin(); itContinente != continentes.end(); itContinente++) {
+        std::vector<Territorio>& territorios = itContinente->getTerritorios();
+        for (itTerritorio = territorios.begin(); itTerritorio != territorios.end(); itTerritorio++) {
+            if (itTerritorio->getCodigo() == codigo) {
                 return true;
             }
         }
     }
     return false;
 }
-bool Tablero::todosLosTerritoriosCubiertos(std::vector<std::string>& codigosVistos) {
-    // Contar cuantos territorios tiene el mapa en total
+bool Tablero::todosLosTerritoriosCubiertos(std::vector<std::string>& codigosVistos) { // implementacion funciones utilizadas en validar estructura a partir de la explicacion de claude
     int totalEnMapa = 0;;
-    for (Continente& continente : continentes) {
-        totalEnMapa += continente.getTerritorios().size();
+    std::vector<Continente>::iterator itContinente;
+    for (itContinente = continentes.begin(); itContinente != continentes.end(); itContinente++) {
+        totalEnMapa += itContinente->getTerritorios().size();
     }
-
-    // Si la cantidad no coincide, ya sabemos que faltan o sobran
-    if ((int)codigosVistos.size() != totalEnMapa) {
+    if (codigosVistos.size() != totalEnMapa) {
         return false;
     }
-
-    // Verificar que cada territorio del mapa este presente en codigosVistos
-    for (Continente& continente : continentes) {
-        std::vector<Territorio>& territorios = continente.getTerritorios();
-        for (Territorio& t : territorios) {
+    std::vector<Territorio>::iterator itTerritorio;
+    std::vector<Continente>::iterator itCont;
+    for (itCont = continentes.begin(); itCont != continentes.end(); itCont++) {
+        std::vector<Territorio>& territorios = itCont->getTerritorios();
+        for (itTerritorio = territorios.begin(); itTerritorio != territorios.end(); itTerritorio++) {
             bool encontrado = false;
-            for (const std::string& codigo : codigosVistos) {
-                if (codigo == t.getCodigo()) {
+            for (std::string codigo : codigosVistos) {
+                if (codigo == itTerritorio->getCodigo()) {
                     encontrado = true;
                     break;
                 }
             }
             if (!encontrado) {
-                return false; // un territorio del mapa no aparecio en el archivo
+                return false;
             }
         }
     }
 
     return true;
+}
+void EstadoJuego::mostrarCodigosYNombres(Tablero& tablero) {
+    for (Continente& continente : tablero.getContinentes()) {
+        for (Territorio& t : continente.getTerritorios()) {
+            std::cout << "  " << t.getCodigo() << " - " << t.getNombre() << std::endl;
+        }
+    }
 }

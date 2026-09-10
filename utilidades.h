@@ -4,8 +4,9 @@
 #include <vector>
 #include <sstream>
 #include <cctype>
+#include <iostream>
  
-inline std::vector<std::string> tokenizar(std::string linea) {
+inline std::vector<std::string> tokenizar(std::string linea) { //esta funcion se busco por internet ya que es una funcion muy comun, el resultado de el asistente ia de google fue el utilizado
     std::vector<std::string> tokens;
     std::istringstream flujo(linea);
     std::string palabra;
@@ -25,7 +26,7 @@ int buscarIndicePorNombre(std::vector<T> contenedor, std::string nombre) {
     return -1;
 }
 
-inline std::string trim(std::string str) {
+inline std::string trim(std::string str) { // esta funcion se busco por internet ya que es una funcion muy comun, el resultado de el asistente ia de google fue el utilizado
     size_t start = str.find_first_not_of(" \t\n\r");
     size_t end = str.find_last_not_of(" \t\n\r");
     if (start == std::string::npos || end == std::string::npos) {
@@ -33,7 +34,7 @@ inline std::string trim(std::string str) {
     }
     return str.substr(start, end - start + 1);
 }
-inline std::string pasarAMinusculas(std::string str) {
+inline std::string pasarAMinusculas(std::string str) { //esta funcion se busco por internet ya que es una funcion muy comun, el resultado de el asistente ia de google fue el utilizado
     for (size_t i = 0; i < str.length(); i++) {
         str[i] = std::tolower(str[i]);
     }
