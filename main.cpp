@@ -4,7 +4,9 @@
 #include <vector>
 #include "juego.h"
 #include "ejecutor_config.h"
-
+//En general en el codigo del proyecto no se utilizo casi ia para generar codigo directamente, las partes que se copiaron directamente estan comentadas en los archivos
+//Se utilizo ia principalemente para identificacion de errores complicados o para dar ideas a problemas identificados
+//Algunas de las dudas resultantes de todo el proceso se resolvieron a traves de la ia pero en general solo se utilizo para eso, el codigo fue hecho en su gran mayoria por nosotros
 int main() {
     srand(time(0));
     EjecutorConfig ejecutor;
