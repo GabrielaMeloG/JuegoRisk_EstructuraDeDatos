@@ -4,6 +4,125 @@
 #include <fstream>
 #include <cstdlib> 
 #include <ctime> 
+#include <limits>
+
+bool EjecutorConfig::validarEstructuraArchivo(const std::string& ruta, Tablero& tablero, std::string& errorMsg) {
+    std::ifstream archivo(ruta);
+    if (!archivo.is_open()) {
+        errorMsg = "No se pudo abrir el archivo.";
+        return false;
+    }
+
+    // 1. Validar cantidad de jugadores
+    int cantidadJugadores;
+    if (!(archivo >> cantidadJugadores)) {
+        errorMsg = "La primera linea debe ser un numero entero (cantidad de jugadores).";
+        return false;
+    }
+    if (cantidadJugadores < 3 || cantidadJugadores > 6) {
+        errorMsg = "Cantidad de jugadores invalida (debe ser 3-6). Se encontro: " + std::to_string(cantidadJugadores);
+        return false;
+    }
+
+    // 2. Validar lineas de jugadores (nombre + color)
+    std::vector<std::string> coloresUsados;
+    std::vector<std::string> coloresPermitidos = {"rojo", "azul", "verde", "amarillo", "morado", "negro"};
+    for (int i = 0; i < cantidadJugadores; i++) {
+        std::string nombre, color;
+        if (!(archivo >> nombre >> color)) {
+            errorMsg = "Linea de jugador " + std::to_string(i + 1) + " incompleta o mal formada.";
+            return false;
+        }
+        bool colorValido = false;
+        for (auto& c : coloresPermitidos) if (c == color) colorValido = true;
+        if (!colorValido) {
+            errorMsg = "Color invalido para jugador '" + nombre + "': " + color;
+            return false;
+        }
+        for (auto& c : coloresUsados) {
+            if (c == color) {
+                errorMsg = "Color repetido entre jugadores: " + color;
+                return false;
+            }
+        }
+        coloresUsados.push_back(color);
+    }
+
+    // 3. Validar las 42 lineas de territorios
+    std::vector<std::string> codigosVistos;
+    std::vector<int> unidadesPorJugador(cantidadJugadores, 0);
+
+    for (int i = 0; i < 42; i++) {
+        std::string codigo, color;
+        int unidades;
+        if (!(archivo >> codigo >> color >> unidades)) {
+            errorMsg = "Territorio #" + std::to_string(i + 1) + " incompleto o el archivo tiene menos de 42 territorios.";
+            return false;
+        }
+        if (unidades <= 0) {
+            errorMsg = "Unidades invalidas (<=0) en territorio " + codigo;
+            return false;
+        }
+
+        // Verificar que el codigo exista realmente en el tablero
+        if (!tablero.existeTerritorioEnMapa(codigo)) {
+            errorMsg = "El codigo de territorio '" + codigo + "' no existe en el mapa del tablero.";
+            return false;
+        }
+
+        // Verificar que el color pertenezca a un jugador real
+        int idxColor = -1;
+        for (size_t j = 0; j < coloresUsados.size(); j++) {
+            if (coloresUsados[j] == color) { idxColor = (int)j; break; }
+        }
+        if (idxColor == -1) {
+            errorMsg = "Territorio " + codigo + " tiene color '" + color + "' que no pertenece a ningun jugador.";
+            return false;
+        }
+        unidadesPorJugador[idxColor] += unidades;
+
+        // Verificar codigo no repetido
+        for (auto& c : codigosVistos) {
+            if (c == codigo) {
+                errorMsg = "Codigo de territorio repetido: " + codigo;
+                return false;
+            }
+        }
+        codigosVistos.push_back(codigo);
+    }
+
+    // 4. Verificar que se cubrieron los 42 territorios del mapa (ninguno faltante)
+    if (!tablero.todosLosTerritoriosCubiertos(codigosVistos)) {
+        errorMsg = "Faltan territorios del mapa por asignar en el archivo.";
+        return false;
+    }
+
+    // 5. Validar unidades iniciales segun reglas de Risk
+    int esperado = -1;
+    switch (cantidadJugadores) {
+        case 3: esperado = 35; break;
+        case 4: esperado = 30; break;
+        case 5: esperado = 25; break;
+        case 6: esperado = 20; break;
+    }
+    for (int i = 0; i < cantidadJugadores; i++) {
+        if (unidadesPorJugador[i] != esperado) {
+            errorMsg = "El jugador con color '" + coloresUsados[i] + "' tiene " +
+                       std::to_string(unidadesPorJugador[i]) + " unidades, pero deberia tener " +
+                       std::to_string(esperado) + ".";
+            return false;
+        }
+    }
+
+    // 6. Verificar que no sobre contenido extra
+    std::string sobrante;
+    if (archivo >> sobrante) {
+        errorMsg = "El archivo tiene contenido extra despues de los 42 territorios esperados.";
+        return false;
+    }
+
+    return true;
+}
 
 void EjecutorConfig::inicializarJuego(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero, Baraja &baraja){
     if(tokens.size() != 2){
@@ -27,6 +146,7 @@ void EjecutorConfig::inicializarJuego(EstadoJuego &estado, std::vector<std::stri
     archivo >> cantidadJugadores;
     if(cantidadJugadores < 3 || cantidadJugadores > 6){
         std::cout << "Cantidad de jugadores no valida. Debe ser entre 3 y 6." << std::endl;
+        return;
     }
     for(int i = 0 ; i < cantidadJugadores; i++){
         std::string nombreJugador;
@@ -141,18 +261,19 @@ void EjecutorConfig::obtenerUnidades(EstadoJuego &estado, std::vector<std::strin
         int unidadesAgregadas = territorios.size() / 3;
         if(unidadesAgregadas < 3){
             unidadesAgregadas = 3;
-            std::cout<< "El jugador " << tokens[1] << " ha reclamado " << unidadesAgregadas << " unidades." << std::endl;
+            std::cout<< "El jugador " << tokens[1] << " puede reclamar " << unidadesAgregadas << " unidades." << std::endl;
         }else{
-            std::cout<< "El jugador " << tokens[1] << " ha reclamado " << unidadesAgregadas << " unidades." << std::endl;
+            std::cout<< "El jugador " << tokens[1] << " puede reclamar " << unidadesAgregadas << " unidades." << std::endl;
         }
         if(jugadores[estado.getTurno()].getCartas().size() >= 3){
             std::cout << "Desea utilizar cartas para obtener unidades adicionales? (si/no)" << std::endl;
             std::string respuesta;
             std::cin >> respuesta;
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             if(trim(respuesta) == "si"){
                 do{ 
                 std::vector<Jugador>& jugadores = estado.getJugadores();
-                Jugador jugador = jugadores[estado.getTurno()];
+                Jugador& jugador = jugadores[estado.getTurno()];
                 std::vector<Carta>& cartasJugador = jugador.getCartas();
                 std::cout << "Cartas disponibles:" << std::endl;
                 for(int i = 0; i < cartasJugador.size(); i++){
@@ -164,14 +285,14 @@ void EjecutorConfig::obtenerUnidades(EstadoJuego &estado, std::vector<std::strin
                 std::vector<std::string> tokensCartas = tokenizar(linea);
                 if(tokensCartas.size() != 3){
                     std::cout << "Solo puede seleccionar 3 cartas." << std::endl;
-                    return;
+                    continue;
                 }
                 int indices[3];
                 for(int i = 0; i < 3; i++){
                     indices[i] = std::stoi(tokensCartas[i]) - 1;
                     if(indices[i] < 0 || indices[i] >= cartasJugador.size()){
                         std::cout << "Indice de carta no valido: " << tokensCartas[i] << std::endl;
-                        return;
+                        continue;
                     }
                 }
                 if(estado.compararCartas(jugador, indices)){
@@ -190,10 +311,16 @@ void EjecutorConfig::obtenerUnidades(EstadoJuego &estado, std::vector<std::strin
                 }
                 std::cout << "Desea utilizar mas cartas? (si/no)" << std::endl;
                 std::cin >> respuesta;
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             }while(pasarAMinusculas(respuesta) != "no"); 
             }
         }
-        
+        if(estado.calcularBonoContinentes(jugadores[estado.getTurno()], tablero) > 0){ 
+            unidadesAgregadas += estado.calcularBonoContinentes(jugadores[estado.getTurno()], tablero);
+            std::cout << "El jugador "<< jugadores[estado.getTurno()].getNombre() <<" a recibido unidades adicionales por tener continentes enteros dandole un total de " << unidadesAgregadas << " unidades para ubicar" << std::endl;
+        }else{
+            std::cout << "El jugador " << jugadores[estado.getTurno()].getNombre() << " tiene un total de " << unidadesAgregadas << " unidades para ubicar" << std::endl;
+        }
         while(unidadesAgregadas > 0){
             int cantidad;
             std::string linea;
@@ -265,6 +392,7 @@ void EjecutorConfig::atacar(EstadoJuego &estado, std::vector<std::string> &token
         do{ 
         std::cout << "Desea realizar un ataque? (si/no)" << std::endl;
         std::cin>>respuesta;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         if(pasarAMinusculas(respuesta) == "no" ){
             jugadores[estado.getTurno()].setHaAtacado(true);
             break;
@@ -276,24 +404,21 @@ void EjecutorConfig::atacar(EstadoJuego &estado, std::vector<std::string> &token
         }
         std::cout << "Desde que territorio desea atacar? (Ingrese el codigo del territorio)" << std::endl;
         std::cin >> territorioId;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         if(jugadores[estado.getTurno()].poseeTerritorio(territorioId)){
-            std::vector<Territorio> territorios = jugadores[estado.getTurno()].getTerritoriosOcupados();
+            std::vector<Territorio>& territorios = jugadores[estado.getTurno()].getTerritoriosOcupados();
             std::vector<Territorio>::iterator it;
-            int unidades;
-            Territorio territorioAtacante = Territorio();
-            for(it = territorios.begin();it!=territorios.end();it++){
-                if(it->getCodigo()==territorioId){
-                    unidades = it->getUnidades();
-                    territorioAtacante = *it;
-                    if(unidades == 1){
-                        std::cout <<"El territorio seleccionado no tiene suficientes unidades para atacar"<<std::endl;
-                        continue;
-                    }
-                }
+            Territorio& territorioAtacante = tablero.getTerritorio(territorioId);
+            int unidades = territorioAtacante.getUnidades();
+            if(territorioAtacante.getUnidades() == 1){
+                std::cout << "El territorio seleccionado no tiene suficientes unidades para atacar" << std::endl;
+                continue;
             }
+        
         std::cout << "Que territorio desea atacar? (Ingrese el codigo del territorio)" << std::endl;
         std::cin >> territorioId;
-        Territorio territorioDefensor = tablero.getTerritorio(territorioId);
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        Territorio& territorioDefensor = tablero.getTerritorio(territorioId);
         if(jugadores[estado.getTurno()].poseeTerritorio(territorioId)){
             std::cout << " no se puede atacar un territorio que ya esta conquistado" << std::endl;
             continue;
@@ -301,11 +426,9 @@ void EjecutorConfig::atacar(EstadoJuego &estado, std::vector<std::string> &token
             int dadosAtacante[3];
             int dadosDefensor[2];
             for(int i = 0 ; i < 3; i++){
-                srand(time(0));
                 dadosAtacante[i] = std::rand() % 6 + 1;
             }
             for(int i = 0 ; i < 2; i++){
-                srand(time(0));
                 dadosDefensor[i] = std::rand() % 6 + 1;
             }
             bool ganadorAtacante = estado.compararDados(dadosAtacante, dadosDefensor);
@@ -315,12 +438,18 @@ void EjecutorConfig::atacar(EstadoJuego &estado, std::vector<std::string> &token
                     
                     std::cout << "El territorio " << territorioDefensor.getNombre() << " ha sido conquistado por " << tokens[1] << std::endl;
                     int cantidad;
+                    if (estado.Victoria(jugadores[estado.getTurno()])) {
+                        std::cout << jugadores[estado.getTurno()].getNombre() << " ha conquistado todos los territorios y GANA LA PARTIDA" << std::endl;
+                        estado.setTerminado(true);
+                        return; 
+                    }
                     do{
                     std::cout << "Cuantas unidades desea mover a ese territorio?"<<std::endl;
                     std::cin>>cantidad;
+                    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
                     }while(cantidad < territorioAtacante.getUnidades());
                     Jugador defensor = Jugador(" ", " "); 
-                    for(Jugador j : jugadores){
+                    for(Jugador& j : jugadores){
                         if(territorioDefensor.getColorOcupante() == j.getColor()){
                             defensor = j;
                         }
@@ -350,6 +479,7 @@ void EjecutorConfig::atacar(EstadoJuego &estado, std::vector<std::string> &token
         }
         std::cout << "Desea seguir atacando? (si/no)" << std::endl;
         std::cin >> respuesta;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         }while(pasarAMinusculas(respuesta) != "no");
         jugadores[estado.getTurno()].setHaAtacado(true);
     }
@@ -382,6 +512,7 @@ void EjecutorConfig::fortificar(EstadoJuego &estado, std::vector<std::string> &t
         std::string respuesta; 
         std::cout << "Desea fortificar su posicion? (si/no)" << std::endl;
         std::cin>>respuesta;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         if(pasarAMinusculas(respuesta) == "no" ){
             estado.siguienteTurno(estado.getJugadores().size());
             return;
@@ -395,15 +526,17 @@ void EjecutorConfig::fortificar(EstadoJuego &estado, std::vector<std::string> &t
         Territorio fortificado = Territorio();
         std::cout << "Que territorio desea fortificar? (Ingrese el codigo del territorio)" << std::endl;
         std::cin >> territorioId;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         if(jugadores[estado.getTurno()].poseeTerritorio(territorioId)){ 
-        Territorio fortificado = tablero.getTerritorio(territorioId);
+        fortificado = tablero.getTerritorio(territorioId);
         }else{
             std::cout << "Usted no es dueño de este territorio" << std::endl;
             continue;
         }
         std::cout << "Desde que territorio desea fortificar? (Ingrese el codigo del territorio)" << std::endl;
         std::cin >> territorioId;
-        if(jugadores[estado.getTurno()].poseeTerritorio(territorioId)){
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        if(jugadores[estado.getTurno()].poseeTerritorio(territorioId) && fortificado.esAdyacente(territorioId)){
             std::vector<Territorio> territorios = jugadores[estado.getTurno()].getTerritoriosOcupados();
             std::vector<Territorio>::iterator it;
             int unidades;
@@ -422,13 +555,20 @@ void EjecutorConfig::fortificar(EstadoJuego &estado, std::vector<std::string> &t
                 do{
                 std::cout << "Cuantas unidades desea mover a ese territorio?"<<std::endl;
                 std::cin>>cantidad;
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
                 }while(cantidad < fortificador.getUnidades());
                 fortificado.setUnidades(fortificado.getUnidades()+cantidad);
                 fortificador.setUnidades(fortificador.getUnidades()-cantidad);
                 std::cout << "Se ha fortificado el territorio " << fortificado.getNombre() << " con " << cantidad << " unidades provenientes del territorio " << fortificador.getNombre() << std::endl;
                 estado.siguienteTurno(estado.getJugadores().size());
+                salir = true;
             }else{
+            if(!jugadores[estado.getTurno()].poseeTerritorio(territorioId)){
             std::cout << "Usted no es dueño de este territorio" << std::endl;
+
+            }else{
+                std::cout << "El territorio seleccionado no es adyacente al que se quiere fortificar " << std::endl;
+            }
             continue;
             }
         }while(!salir);
@@ -446,7 +586,7 @@ void EjecutorConfig::estadoJuego(EstadoJuego &estado, std::vector<std::string> &
         std::cout << "El juego ya ha terminado." << std::endl;
         return;
     }else{
-        std::vector<Jugador> jugadores=estado.getJugadores();
+        std::vector<Jugador>& jugadores=estado.getJugadores();
         std::cout << "Cantidad de jugadores: " << jugadores.size() <<std::endl;
         std::cout << "Turno actual del jugador: " << jugadores[estado.getTurno()].getNombre() << std::endl;
         std::cout << "Jugadores: " << std::endl;
@@ -454,12 +594,12 @@ void EjecutorConfig::estadoJuego(EstadoJuego &estado, std::vector<std::string> &
             std::cout << "Nombre: "<<j.getNombre() << " Color: " << j.getColor()<<std::endl;
         }
         std::cout << "Territorios: " << std::endl;
-        std::vector<Continente> continentes = tablero.getContinentes();
+        std::vector<Continente>& continentes = tablero.getContinentes();
         std::vector<Continente>::iterator itContinente;
         std::vector<Territorio>::iterator itTerritorio;
         for(itContinente = continentes.begin(); itContinente != continentes.end(); itContinente++){
             std::cout << std::endl << itContinente->getNombre() << std::endl;
-            std::vector<Territorio> territorios = itContinente->getTerritorios();
+            std::vector<Territorio>& territorios = itContinente->getTerritorios();
         for(itTerritorio = territorios.begin(); itTerritorio != territorios.end(); itTerritorio++){
             std::cout << itTerritorio->getNombre() << " " << " ocupado por el color " << itTerritorio->getColorOcupante() << std::endl;
         }

@@ -6,6 +6,7 @@
 #include "ejecutor_config.h"
 
 int main() {
+    srand(time(0));
     EjecutorConfig ejecutor;
     EstadoJuego estado;
     Baraja baraja = Baraja();
@@ -53,7 +54,10 @@ int main() {
             ejecutor.costoConquista(estado, tokens, tablero, baraja);
         }else if (tokens[0] == "conquista_mas_barata") {
             ejecutor.conquistaMasBarata(estado, tokens, tablero, baraja);
-        }else {
+        }else if(estado.getTerminado()){
+            std::cout << "LA PARTIDA A TERMINADO CON " << estado.getJugadores()[estado.getTurno()].getNombre() << " COMO GANADOR DE LA PARTIDA"<<std::endl;
+            continuar = false;
+        } else {
             std::cout << "Comando no reconocido: " << tokens[0] << ". Escriba ayuda para ver la lista de comandos" << std::endl;
         }
     

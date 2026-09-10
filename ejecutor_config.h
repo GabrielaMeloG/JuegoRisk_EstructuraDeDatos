@@ -6,6 +6,7 @@
 
 class EjecutorConfig {
     public:
+        bool validarEstructuraArchivo(const std::string& ruta, Tablero& tablero, std::string& errorMsg);
         void inicializarJuego(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero, Baraja &baraja);
         void obtenerUnidades(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero, Baraja &baraja);
         void atacar(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero, Baraja &baraja);

@@ -54,7 +54,7 @@ class Jugador {
         bool getObtenidoUnidades();
         bool getHaAtacado();
         void quitarCartas(int indices[3]);
-        std::vector<Territorio> getTerritoriosOcupados();
+        std::vector<Territorio>& getTerritoriosOcupados();
         bool poseeTerritorio(std::string codigo);
         int getUnidades();
         std::vector<Carta>& getCartas();
@@ -90,6 +90,8 @@ class Tablero {
         std::vector<Continente>& getContinentes();
         void agregarUnidadesTerritorio(std::string codigoTerritorio, int cantidad);
         Territorio& getTerritorio(std::string codigoTerritorio);
+        bool existeTerritorioEnMapa(std::string codigoTerritorio);
+        bool todosLosTerritoriosCubiertos(std::vector<std::string>& codigoTerritorio);
 };
 class Baraja {
     private:
@@ -123,6 +125,8 @@ class EstadoJuego {
         bool existeTerritorio(std::string codigo, Tablero tablero);
         void reiniciar();
         bool compararDados(int dadosAtacante[3], int dadosDefensor[2]);
+        bool Victoria(Jugador jugador);
+        int calcularBonoContinentes(Jugador jugador, Tablero tablero);
 };
 
 #endif

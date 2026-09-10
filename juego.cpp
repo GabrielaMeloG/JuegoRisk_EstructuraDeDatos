@@ -190,7 +190,7 @@ bool Jugador::getObtenidoUnidades() {
 bool Jugador::getHaAtacado() {
     return haAtacado;
 }
-std::vector<Territorio> Jugador::getTerritoriosOcupados() {
+std::vector<Territorio>& Jugador::getTerritoriosOcupados() {
     return territoriosOcupados;
 }
 int Jugador::getUnidades() {
@@ -387,4 +387,73 @@ bool Jugador::tieneTerritorioParaAtacar() {
     }
     return false;
 }
+bool EstadoJuego::Victoria(Jugador jugador) {
+    if(jugador.getTerritoriosOcupados().size() == 42){
+        return true;
+    }
+    return false;
+}
+int EstadoJuego::calcularBonoContinentes(Jugador jugador, Tablero tablero) {
+    int unidadesExtras = 0;
+    std::vector<Continente>& continentes = tablero.getContinentes();
+    int unidadesExtrasPorContinente[6] = {5, 2, 5, 3, 7, 2}; 
+    std::vector<Continente>::iterator itContinente;
+    std::vector<Territorio>::iterator itTerritorio;
+    for (itContinente = continentes.begin() ; itContinente != continentes.end() ; itContinente++) {
+        std::vector<Territorio>& territorios = itContinente->getTerritorios();
+        bool tieneTodo = true;
+        for (itTerritorio = territorios.begin() ; itTerritorio != territorios.end() ; itTerritorio++) {
+            if (itTerritorio->getColorOcupante() != jugador.getColor()) {
+                tieneTodo = false;
+                break;
+            }
+        }
+        if (tieneTodo) {
+            int idContinente = itContinente->getCodigo();
+            unidadesExtras += unidadesExtrasPorContinente[idContinente];
+        }
+    }
+    return unidadesExtras;
+}
+bool Tablero::existeTerritorioEnMapa(std::string codigo) {
+    for (Continente& continente : continentes) {
+        std::vector<Territorio>& territorios = continente.getTerritorios();
+        for (Territorio& t : territorios) {
+            if (t.getCodigo() == codigo) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+bool Tablero::todosLosTerritoriosCubiertos(std::vector<std::string>& codigosVistos) {
+    // Contar cuantos territorios tiene el mapa en total
+    int totalEnMapa = 0;;
+    for (Continente& continente : continentes) {
+        totalEnMapa += continente.getTerritorios().size();
+    }
 
+    // Si la cantidad no coincide, ya sabemos que faltan o sobran
+    if ((int)codigosVistos.size() != totalEnMapa) {
+        return false;
+    }
+
+    // Verificar que cada territorio del mapa este presente en codigosVistos
+    for (Continente& continente : continentes) {
+        std::vector<Territorio>& territorios = continente.getTerritorios();
+        for (Territorio& t : territorios) {
+            bool encontrado = false;
+            for (const std::string& codigo : codigosVistos) {
+                if (codigo == t.getCodigo()) {
+                    encontrado = true;
+                    break;
+                }
+            }
+            if (!encontrado) {
+                return false; // un territorio del mapa no aparecio en el archivo
+            }
+        }
+    }
+
+    return true;
+}
