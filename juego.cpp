@@ -4,7 +4,7 @@
 #include <fstream>
 #include <vector>
 #include <string>
-#include <algorithm>//Esta libreria esta para revolver la baraja de cartas, esa libreria nos la explico la ia, luego se investigo un poco mas sobre la funcion que se estaba utilizando especificamente
+#include <algorithm>//Esta libreria esta para revolver la baraja de cartas y ordenar de mayor a menor los dados, esa libreria nos la explico la ia, luego se investigo un poco mas sobre las funciones que se estaban utilizando especificamente
 #include <random>
 
 EstadoJuego::EstadoJuego() {
@@ -356,18 +356,14 @@ Territorio& Tablero::getTerritorio(std::string codigoTerritorio){
     throw std::runtime_error("Territorio no encontrado: " + codigoTerritorio);
 }
 bool EstadoJuego::compararDados(int dadosAtacante[3], int dadosDefensor[2]){
-    int dadosUsados[2] = {0, 0};
-    for(int i = 0; i < 3 ; i++){
-        if(dadosAtacante[i] >= dadosUsados[0]){
-            dadosUsados[0]= dadosAtacante[i];
-        }else if(dadosAtacante[i] >= dadosUsados[1]){
-            dadosUsados[1] = dadosAtacante[i];
-        }
-    }
+    std::sort(dadosAtacante, dadosAtacante + 3, std::greater<int>());// para esta parte se utilizo la libreria algorithm
+    std::sort(dadosDefensor, dadosDefensor + 2, std::greater<int>());
+
     int perdidasAtacante = 0;
     int perdidasDefensor = 0;
-    for(int i = 0 ; i < 2 ; i++){
-        if(dadosUsados[i] <= dadosDefensor[i]){
+
+    for(int i = 0; i < 2; i++){
+        if(dadosAtacante[i] <= dadosDefensor[i]){ 
             perdidasAtacante++;
         }else{
             perdidasDefensor++;

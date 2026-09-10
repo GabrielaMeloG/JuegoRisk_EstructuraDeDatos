@@ -386,10 +386,10 @@ void EjecutorConfig::atacar(EstadoJuego &estado, std::vector<std::string> &token
     }else{
         std::string territorioId;
         std::string respuesta;
-        do{ 
         std::cout << "Desea realizar un ataque? (si/no)" << std::endl;
         std::cin>>respuesta;
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        do{ 
         if(pasarAMinusculas(respuesta) == "no" ){
             jugadores[estado.getTurno()].setHaAtacado(true);
             break;
@@ -429,8 +429,19 @@ void EjecutorConfig::atacar(EstadoJuego &estado, std::vector<std::string> &token
             for(int i = 0 ; i < 2; i++){
                 dadosDefensor[i] = std::rand() % 6 + 1;
             }
+            std::cout << "Dados del atacante: ";
+            for(int i = 0; i < 3; i++){
+                std::cout << dadosAtacante[i] << " ";
+            }
+            std::cout << std::endl;
+            std::cout << "Dados del defensor: ";
+            for(int i = 0; i < 2; i++){
+                std::cout << dadosDefensor[i] << " ";
+            }
+            std::cout << std::endl;
             bool ganadorAtacante = estado.compararDados(dadosAtacante, dadosDefensor);
             if(ganadorAtacante){
+                std::cout << "Resultado: el atacante gana el enfrentamiento. El defensor pierde 1 unidad." << std::endl;
                 territorioDefensor.setUnidades(territorioDefensor.getUnidades()-1);
                 if(territorioDefensor.getUnidades()==0){
                     
@@ -464,6 +475,7 @@ void EjecutorConfig::atacar(EstadoJuego &estado, std::vector<std::string> &token
                     }
                 }
             }else{
+                std::cout << "Resultado: el defensor gana el enfrentamiento. El atacante pierde 1 unidad." << std::endl;
                 territorioAtacante.setUnidades(territorioAtacante.getUnidades()-1);
                 if(territorioAtacante.getUnidades()==1){
                     std::cout << "El territorio " << territorioDefensor.getNombre() << " ya no puede atacar mas al quedarse con solo 1 unidad" << std::endl;
