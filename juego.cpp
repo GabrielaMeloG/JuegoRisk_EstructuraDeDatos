@@ -15,7 +15,6 @@ void EstadoJuego::reiniciar() {
     inicializado = false;
     terminado = false;
     jugadores.clear();
-    turnos.clear();
 }
 
 bool EstadoJuego::existeJugador(std::string nombre) {
@@ -24,21 +23,6 @@ bool EstadoJuego::existeJugador(std::string nombre) {
 
 int EstadoJuego::indiceJugador(std::string nombre) {
     return buscarIndicePorNombre(jugadores, nombre);    
-}
-
-bool EstadoJuego::esTurnoDe(std::string nombre) {
-    if (turnos.empty()) {
-        return false;
-    }
-    return turnos.front() == nombre;
-}
-
-void EstadoJuego::siguienteTurno() {
-    if (!turnos.empty()) {
-        std::string jugadorActual = turnos.front();
-        turnos.pop_front();
-        turnos.push_back(jugadorActual);
-    }
 }
 std::string Territorio::getCodigo() {
     return codigo;
@@ -107,7 +91,7 @@ Tablero::Tablero(){
     }
     
 }
-std::vector<Continente> Tablero::getContinentes() { 
+std::vector<Continente>& Tablero::getContinentes() { 
     return continentes; 
 }
 std::string Jugador::getNombre(){
@@ -116,7 +100,7 @@ std::string Jugador::getNombre(){
 std::string Continente::getNombre() { 
     return nombre;
 }
-std::vector<Territorio> Continente::getTerritorios() {
+std::vector<Territorio>& Continente::getTerritorios() {
      return territorios;
 }
 int Continente::getCodigo(){
@@ -128,6 +112,7 @@ std::string Territorio::getNombre(){
 Jugador::Jugador(std::string nombre, std::string color) {
     this->nombre = nombre;
     this->color = color;
+    unidades = 0;
     obtenidoUnidades = false;
     haAtacado = false;
 }
@@ -315,7 +300,7 @@ bool Jugador::poseeTerritorio(std::string codigo) {
     }
     return false;
 }
-bool compararCartas(Jugador jugador, int indices[3]){
+bool EstadoJuego::compararCartas(Jugador jugador, int indices[3]){
     std::vector<Carta> cartas = jugador.getCartas();
     if(cartas[indices[0]].getDibujo() == cartas[indices[1]].getDibujo() && cartas[indices[1]].getDibujo() == cartas[indices[2]].getDibujo()){
         return true;
@@ -368,8 +353,9 @@ Territorio& Tablero::getTerritorio(std::string codigoTerritorio){
             }
         }
     }
+    throw std::runtime_error("Territorio no encontrado: " + codigoTerritorio);
 }
-bool compararDados(int dadosAtacante[3], int dadosDefensor[2]){
+bool EstadoJuego::compararDados(int dadosAtacante[3], int dadosDefensor[2]){
     int dadosUsados[2] = {0, 0};
     for(int i = 0; i < 3 ; i++){
         if(dadosAtacante[i] >= dadosUsados[0]){
@@ -392,5 +378,13 @@ bool compararDados(int dadosAtacante[3], int dadosDefensor[2]){
     }else{
         return false;
     }
+}
+bool Jugador::tieneTerritorioParaAtacar() {
+    for (Territorio t : territoriosOcupados) {
+        if (t.getUnidades() > 1) {
+            return true;
+        }
+    }
+    return false;
 }
 

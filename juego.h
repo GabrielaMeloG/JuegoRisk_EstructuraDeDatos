@@ -25,6 +25,18 @@ class Territorio {
         void setUnidades(int cantidad);
         bool esAdyacente(std::string codigo);
     };
+    class Carta {
+    private:
+        std::string codigoTerritorio;
+        std::string dibujo;
+        bool esComodin;
+    public:
+        Carta(std::string id, std::string dibujo);
+        std::string getIdTerritorio();
+        std::string getDibujo();
+        bool getEsComodin();
+        void setComodin(bool comodin);
+};
 //TAD jugador 
 class Jugador {
     private:
@@ -53,6 +65,7 @@ class Jugador {
         void agregarUnidades(int cantidad);
         void eliminarUnidades(int cantidad);
         void eliminarTerritorio(std::string codigo);
+        bool tieneTerritorioParaAtacar();
 
 };
 class Continente {
@@ -63,7 +76,7 @@ class Continente {
     public:
         Continente(int id, std::string nombre, std::vector<Territorio> territorios);
         std::string getNombre();
-        std::vector<Territorio> getTerritorios();
+        std::vector<Territorio>& getTerritorios();
         int getCodigo();
 };
 class Tablero {
@@ -74,21 +87,9 @@ class Tablero {
         Tablero();
         int getCantidadCartasEntregadas();
         void cartasEntregadas();
-        std::vector<Continente> getContinentes();
+        std::vector<Continente>& getContinentes();
         void agregarUnidadesTerritorio(std::string codigoTerritorio, int cantidad);
         Territorio& getTerritorio(std::string codigoTerritorio);
-};
-class Carta {
-    private:
-        std::string codigoTerritorio;
-        std::string dibujo;
-        bool esComodin;
-    public:
-        Carta(std::string id, std::string dibujo);
-        std::string getIdTerritorio();
-        std::string getDibujo();
-        bool getEsComodin();
-        void setComodin(bool comodin);
 };
 class Baraja {
     private:
@@ -103,7 +104,6 @@ class EstadoJuego {
         bool inicializado;
         bool terminado;
         std::vector<Jugador> jugadores;
-        std::deque<std::string> turnos;
         int turnoActual;
     public: 
         EstadoJuego();
@@ -120,7 +120,6 @@ class EstadoJuego {
         bool existeJugador(std::string nombre);
         int indiceJugador(std::string nombre);
         bool esTurnoDe(std::string nombre);
-        void siguienteTurno();
         bool existeTerritorio(std::string codigo, Tablero tablero);
         void reiniciar();
         bool compararDados(int dadosAtacante[3], int dadosDefensor[2]);

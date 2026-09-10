@@ -10,15 +10,10 @@ void EjecutorConfig::inicializarJuego(EstadoJuego &estado, std::vector<std::stri
         std::cout << "Parametros no validos. 'ayuda inicializar' para ver el uso correcto." << std::endl;
         return;
     }
-    if(!estado.getInicializado()){
-        std::cout << "Partida iniciada." << std::endl;
-        estado.setInicializado(true);
-        return;
-    }else{
+    if(estado.getInicializado()){
         std::cout << "El juego ya ha sido inicializado." << std::endl;
         return;
     }
-    
     std::ifstream archivo(tokens[1]);
     if(!archivo.is_open()) {
         std::cout << "No se pudo abrir el archivo: " << tokens[1] << std::endl;
@@ -38,19 +33,18 @@ void EjecutorConfig::inicializarJuego(EstadoJuego &estado, std::vector<std::stri
         std::string colorJugador;
         archivo >> nombreJugador >> colorJugador;
         Jugador jugador = Jugador(nombreJugador, colorJugador);
-        std::vector<Jugador> jugadores = estado.getJugadores();
-        jugadores.push_back(jugador);
+        estado.getJugadores().push_back(jugador);
     }
     for(int i = 0 ; i < 42 ; i++){
         std::string codigoTerritorio;
         std::string colorOcupante;
         int unidades;
         archivo >> codigoTerritorio >> colorOcupante >> unidades;
-        std::vector<Continente> continentes = tablero.getContinentes();
+        std::vector<Continente>& continentes = tablero.getContinentes();
         std::vector<Continente>::iterator itContinente;
         std::vector<Territorio>::iterator itTerritorio;
         for(itContinente = continentes.begin(); itContinente != continentes.end();itContinente++){
-            std::vector<Territorio> territorios = itContinente->getTerritorios();
+            std::vector<Territorio>& territorios = itContinente->getTerritorios();
             for(itTerritorio = territorios.begin(); itTerritorio != territorios.end(); itTerritorio++){
                 if(itTerritorio->getCodigo() == codigoTerritorio){
                     itTerritorio->setColorOcupante(colorOcupante);
@@ -59,11 +53,12 @@ void EjecutorConfig::inicializarJuego(EstadoJuego &estado, std::vector<std::stri
             }
         }
     }
-    for(Jugador j : estado.getJugadores()){
-        std::vector<Continente> continentes = tablero.getContinentes();
-        for(Continente continente : continentes){
-            std::vector<Territorio> territorios = continente.getTerritorios();
-            for(Territorio territorio : territorios){
+    std::vector<Jugador>& jugadores = estado.getJugadores();
+    for(Jugador& j : jugadores){
+        std::vector<Continente>& continentes = tablero.getContinentes();
+        for(Continente& continente : continentes){
+            std::vector<Territorio>& territorios = continente.getTerritorios();
+            for(Territorio& territorio : territorios){
                 if(territorio.getColorOcupante() == j.getColor()){
                     j.agegarTerritorio(territorio);
                     j.agregarUnidades(territorio.getUnidades());
@@ -71,9 +66,10 @@ void EjecutorConfig::inicializarJuego(EstadoJuego &estado, std::vector<std::stri
             }
         }
     }
+
     switch(cantidadJugadores){
         case 3:
-            for(Jugador j : estado.getJugadores()){
+            for(Jugador& j : estado.getJugadores()){
                 if(j.getUnidades() != 35){
                     std::cout << "Error: Hay jugadores que no tienen 35 unidades." << std::endl;
                     estado.reiniciar();
@@ -82,7 +78,7 @@ void EjecutorConfig::inicializarJuego(EstadoJuego &estado, std::vector<std::stri
             }
             break;
         case 4:
-            for(Jugador j : estado.getJugadores()){
+            for(Jugador& j : estado.getJugadores()){
                 if(j.getUnidades() != 30){
                     std::cout << "Error: Hay jugadores que no tienen 30 unidades." << std::endl;
                     estado.reiniciar();
@@ -91,7 +87,7 @@ void EjecutorConfig::inicializarJuego(EstadoJuego &estado, std::vector<std::stri
             }
             break;
         case 5:
-            for(Jugador j : estado.getJugadores()){
+            for(Jugador& j : estado.getJugadores()){
                 if(j.getUnidades() != 25){
                     std::cout << "Error: Hay jugadores que no tienen 25 unidades." << std::endl;
                     estado.reiniciar();
@@ -100,7 +96,7 @@ void EjecutorConfig::inicializarJuego(EstadoJuego &estado, std::vector<std::stri
             }
             break;
         case 6:
-            for(Jugador j : estado.getJugadores()){
+            for(Jugador& j : estado.getJugadores()){
                 if(j.getUnidades() != 20){
                     std::cout << "Error: Hay jugadores que no tienen 20 unidades." << std::endl;
                     estado.reiniciar();
@@ -117,6 +113,8 @@ void EjecutorConfig::inicializarJuego(EstadoJuego &estado, std::vector<std::stri
             itJugador->agregarCarta(carta);
         }
     }
+    estado.setInicializado(true);
+    estado.setTurno(0);
     std::cout << "Partida iniciada." << std::endl;
     return;
 }
@@ -138,7 +136,7 @@ void EjecutorConfig::obtenerUnidades(EstadoJuego &estado, std::vector<std::strin
         std::cout << "No es el turno del jugador " << tokens[1] << "." << std::endl;
         return;
     }else{ 
-        std::vector<Jugador> jugadores = estado.getJugadores();
+        std::vector<Jugador>& jugadores = estado.getJugadores();
         std::vector<Territorio> territorios = jugadores[estado.getTurno()].getTerritoriosOcupados();
         int unidadesAgregadas = territorios.size() / 3;
         if(unidadesAgregadas < 3){
@@ -153,9 +151,9 @@ void EjecutorConfig::obtenerUnidades(EstadoJuego &estado, std::vector<std::strin
             std::cin >> respuesta;
             if(trim(respuesta) == "si"){
                 do{ 
-                std::vector<Jugador> jugadores = estado.getJugadores();
+                std::vector<Jugador>& jugadores = estado.getJugadores();
                 Jugador jugador = jugadores[estado.getTurno()];
-                std::vector<Carta> cartasJugador = jugador.getCartas();
+                std::vector<Carta>& cartasJugador = jugador.getCartas();
                 std::cout << "Cartas disponibles:" << std::endl;
                 for(int i = 0; i < cartasJugador.size(); i++){
                     std::cout << i+1 << ". Codigo: " << cartasJugador[i].getIdTerritorio() << ", Dibujo: " << cartasJugador[i].getDibujo() << std::endl;
@@ -192,7 +190,7 @@ void EjecutorConfig::obtenerUnidades(EstadoJuego &estado, std::vector<std::strin
                 }
                 std::cout << "Desea utilizar mas cartas? (si/no)" << std::endl;
                 std::cin >> respuesta;
-            }while(respuesta != "no"); 
+            }while(pasarAMinusculas(respuesta) != "no"); 
             }
         }
         
@@ -245,7 +243,7 @@ void EjecutorConfig::atacar(EstadoJuego &estado, std::vector<std::string> &token
         std::cout << "Parametros no validos. 'ayuda atacar' para ver el uso correcto." << std::endl;
         return;
     }
-    std::vector<Jugador> jugadores = estado.getJugadores();
+    std::vector<Jugador>& jugadores = estado.getJugadores();
     if(!estado.getInicializado()){
         std::cout << "El juego no ha sido inicializado." << std::endl;
         return;
@@ -265,6 +263,17 @@ void EjecutorConfig::atacar(EstadoJuego &estado, std::vector<std::string> &token
         std::string territorioId;
         std::string respuesta;
         do{ 
+        std::cout << "Desea realizar un ataque? (si/no)" << std::endl;
+        std::cin>>respuesta;
+        if(pasarAMinusculas(respuesta) == "no" ){
+            jugadores[estado.getTurno()].setHaAtacado(true);
+            break;
+        }
+        if(!jugadores[estado.getTurno()].tieneTerritorioParaAtacar()){
+            std::cout << "No tienes territorios con suficientes unidades para realizar ataques" << std::endl;
+            jugadores[estado.getTurno()].setHaAtacado(true);
+            break;
+        }
         std::cout << "Desde que territorio desea atacar? (Ingrese el codigo del territorio)" << std::endl;
         std::cin >> territorioId;
         if(jugadores[estado.getTurno()].poseeTerritorio(territorioId)){
@@ -278,6 +287,7 @@ void EjecutorConfig::atacar(EstadoJuego &estado, std::vector<std::string> &token
                     territorioAtacante = *it;
                     if(unidades == 1){
                         std::cout <<"El territorio seleccionado no tiene suficientes unidades para atacar"<<std::endl;
+                        continue;
                     }
                 }
             }
@@ -320,13 +330,14 @@ void EjecutorConfig::atacar(EstadoJuego &estado, std::vector<std::string> &token
                     territorioDefensor.setUnidades(territorioDefensor.getUnidades()+cantidad);
                     territorioAtacante.setUnidades(territorioAtacante.getUnidades()-cantidad);
                     jugadores[estado.getTurno()].agegarTerritorio(territorioDefensor);
-                    break;
+                    jugadores[estado.getTurno()].agregarCarta(baraja.tomarCarta());
+                    continue;
                 }
             }else{
                 territorioAtacante.setUnidades(territorioAtacante.getUnidades()-1);
                 if(territorioAtacante.getUnidades()==1){
                     std::cout << "El territorio " << territorioDefensor.getNombre() << " ya no puede atacar mas al quedarse con solo 1 unidad" << std::endl;
-                    break;
+                    continue;
                 }
             }
 
@@ -339,15 +350,17 @@ void EjecutorConfig::atacar(EstadoJuego &estado, std::vector<std::string> &token
         }
         std::cout << "Desea seguir atacando? (si/no)" << std::endl;
         std::cin >> respuesta;
-        }while(trim(respuesta) != "no");
+        }while(pasarAMinusculas(respuesta) != "no");
+        jugadores[estado.getTurno()].setHaAtacado(true);
     }
+    
 }
 void EjecutorConfig::fortificar(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero, Baraja &baraja){
     if(tokens.size() != 2){
         std::cout << "Parametros no validos. 'ayuda fortificar' para ver el uso correcto." << std::endl;
         return;
     }
-    std::vector<Jugador> jugadores = estado.getJugadores();
+    std::vector<Jugador>& jugadores = estado.getJugadores();
     if(!estado.getInicializado()){
         std::cout << "El juego no ha sido inicializado." << std::endl;
         return;
@@ -364,7 +377,61 @@ void EjecutorConfig::fortificar(EstadoJuego &estado, std::vector<std::string> &t
         std::cout << "El jugador " << tokens[1] << " no ha atacado." << std::endl;
         return;
     }else{
-        std::cout << "El jugador " << tokens[1] << " ha terminado de fortificar su posicion." << std::endl;
+        bool salir = false;
+        std::string territorioId;
+        std::string respuesta; 
+        std::cout << "Desea fortificar su posicion? (si/no)" << std::endl;
+        std::cin>>respuesta;
+        if(pasarAMinusculas(respuesta) == "no" ){
+            estado.siguienteTurno(estado.getJugadores().size());
+            return;
+        }
+        if(!jugadores[estado.getTurno()].tieneTerritorioParaAtacar()){
+            std::cout << "No tienes territorios con suficientes unidades para fortificar a otros" << std::endl;
+            estado.siguienteTurno(estado.getJugadores().size());
+            return;
+        }
+        do{
+        Territorio fortificado = Territorio();
+        std::cout << "Que territorio desea fortificar? (Ingrese el codigo del territorio)" << std::endl;
+        std::cin >> territorioId;
+        if(jugadores[estado.getTurno()].poseeTerritorio(territorioId)){ 
+        Territorio fortificado = tablero.getTerritorio(territorioId);
+        }else{
+            std::cout << "Usted no es dueño de este territorio" << std::endl;
+            continue;
+        }
+        std::cout << "Desde que territorio desea fortificar? (Ingrese el codigo del territorio)" << std::endl;
+        std::cin >> territorioId;
+        if(jugadores[estado.getTurno()].poseeTerritorio(territorioId)){
+            std::vector<Territorio> territorios = jugadores[estado.getTurno()].getTerritoriosOcupados();
+            std::vector<Territorio>::iterator it;
+            int unidades;
+            Territorio fortificador = Territorio();
+            for(it = territorios.begin();it!=territorios.end();it++){
+                if(it->getCodigo()==territorioId){
+                    unidades = it->getUnidades();
+                    fortificador = *it;
+                    if(unidades == 1){
+                        std::cout <<"El territorio seleccionado no tiene suficientes unidades para fortificar a otro"<<std::endl;
+                        continue;
+                    }
+                }
+            }
+                int cantidad;
+                do{
+                std::cout << "Cuantas unidades desea mover a ese territorio?"<<std::endl;
+                std::cin>>cantidad;
+                }while(cantidad < fortificador.getUnidades());
+                fortificado.setUnidades(fortificado.getUnidades()+cantidad);
+                fortificador.setUnidades(fortificador.getUnidades()-cantidad);
+                std::cout << "Se ha fortificado el territorio " << fortificado.getNombre() << " con " << cantidad << " unidades provenientes del territorio " << fortificador.getNombre() << std::endl;
+                estado.siguienteTurno(estado.getJugadores().size());
+            }else{
+            std::cout << "Usted no es dueño de este territorio" << std::endl;
+            continue;
+            }
+        }while(!salir);
     }
 }
 void EjecutorConfig::estadoJuego(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero, Baraja &baraja){
@@ -379,7 +446,25 @@ void EjecutorConfig::estadoJuego(EstadoJuego &estado, std::vector<std::string> &
         std::cout << "El juego ya ha terminado." << std::endl;
         return;
     }else{
-        std::cout << "aqui va la respuesta xdddd" << std::endl;
+        std::vector<Jugador> jugadores=estado.getJugadores();
+        std::cout << "Cantidad de jugadores: " << jugadores.size() <<std::endl;
+        std::cout << "Turno actual del jugador: " << jugadores[estado.getTurno()].getNombre() << std::endl;
+        std::cout << "Jugadores: " << std::endl;
+        for(Jugador j : jugadores){
+            std::cout << "Nombre: "<<j.getNombre() << " Color: " << j.getColor()<<std::endl;
+        }
+        std::cout << "Territorios: " << std::endl;
+        std::vector<Continente> continentes = tablero.getContinentes();
+        std::vector<Continente>::iterator itContinente;
+        std::vector<Territorio>::iterator itTerritorio;
+        for(itContinente = continentes.begin(); itContinente != continentes.end(); itContinente++){
+            std::cout << std::endl << itContinente->getNombre() << std::endl;
+            std::vector<Territorio> territorios = itContinente->getTerritorios();
+        for(itTerritorio = territorios.begin(); itTerritorio != territorios.end(); itTerritorio++){
+            std::cout << itTerritorio->getNombre() << " " << " ocupado por el color " << itTerritorio->getColorOcupante() << std::endl;
+        }
+    }
+        
     }
 }
 void EjecutorConfig::ayuda(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero, Baraja &baraja){
