@@ -1,4 +1,4 @@
-#include _ARBOLGENERAL_H_ 
+#ifndef _ARBOLGENERAL_H_ 
 #define _ARBOLGENERAL_H_
 
 #include "NodoGeneral.h"
