@@ -1,17 +1,17 @@
-#include "NodoGeneral"
+#include "NodoGeneral.h"
 
 template< class T >
 NodoGeneral<T>::NodoGeneral(){
-    this ->desc.clear()
+    this ->desc.clear();
 
 }
 
 template< class T >
-NodoGeneral<T>::NodoGeneral(){
-    std::list<NodoGeneral<T> >::iterador it;
-        for (it= this->desc.begin(); it != this->desc.end(); it;)
+NodoGeneral<T>::~NodoGeneral(){
+    std::list<NodoGeneral<T> >::iterator it;
+        for (it= this->desc.begin(); it != this->desc.end(); it++)
             delete *it;
-        this->desc.clear()
+        this->desc.clear();
 
 }
 
@@ -22,7 +22,7 @@ T& NodoGeneral<T>::obtenerDato(){
 }
 
 template< class T >
-void NodoGeneral<T>::fijarDato(){
+void NodoGeneral<T>::fijarDato(T &val){
     this->dato = val;
 
 }

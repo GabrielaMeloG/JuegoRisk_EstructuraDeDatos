@@ -13,13 +13,18 @@ class ArbolBinarioOrd {
         bool esVacio();
         T datoRaiz();
         int altura();
+        int altura(NodoBinario<T>* nodo);  
         int tamano();
+        int tamano(NodoBinario<T>* nodo);
         bool insertar(T val);
         bool eliminar(T val);
         bool buscar(T val);
         void preOrden();
+        void preOrden(NodoBinario<T>* nodo);
         void inOrden();
+        void inOrden(NodoBinario<T>* nodo);
         void posOrden();
+        void posOrden(NodoBinario<T>* nodo);
         void nivelOrden();
 
 };
