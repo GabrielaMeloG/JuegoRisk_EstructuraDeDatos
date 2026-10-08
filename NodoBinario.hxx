@@ -59,6 +59,9 @@ template< class T >
 bool NodoBinario<T>::esHoja() {
     return (this->hijoIzq == NULL && this->hijoDer == NULL);
 }
-
-
-
+template< class T >
+T NodoBinario<T>::diferenciaAltura() {
+    int alturaIzq = (this->hijoIzq != NULL) ? this->hijoIzq->diferenciaAltura() : 0;
+    int alturaDer = (this->hijoDer != NULL) ? this->hijoDer->diferenciaAltura() : 0;
+    return alturaIzq - alturaDer;
+}

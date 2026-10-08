@@ -18,6 +18,7 @@ class NodoBinario {
         void fijarHijoIzq(NodoBinario<T>* izq);
         void fijarHijoDer(NodoBinario<T>* der);
         bool esHoja();
+        T diferenciaAltura();
 };
 
 #include "NodoBinario.hxx"

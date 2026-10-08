@@ -1,13 +1,13 @@
-#include "ArbolBinarioOrd.h"
+#include "ArbolAVL.h"
 #include <queue>
 
 template< class T >
-ArbolBinarioOrd<T>::ArbolBinarioOrd() {
+ArbolAVL<T>::ArbolAVL() {
     this->raiz = NULL;
 }
 
 template< class T >
-ArbolBinarioOrd<T>::~ArbolBinarioOrd() {
+ArbolAVL<T>::~ArbolAVL() {
     if (this->raiz != NULL) {
         delete this->raiz;
         this->raiz = NULL;
@@ -15,20 +15,20 @@ ArbolBinarioOrd<T>::~ArbolBinarioOrd() {
 }
 
 template< class T >
-bool ArbolBinarioOrd<T>::esVacio() {
+bool ArbolAVL<T>::esVacio() {
     return this->raiz == NULL;
     
 }
 
 template< class T >
-T ArbolBinarioOrd<T>::datoRaiz() {
+T ArbolAVL<T>::datoRaiz() {
     return (this->raiz)->obtenerDato();
     
 }
 
 //recurrente
 template< class T >
-int ArbolBinarioOrd<T>::altura() {
+int ArbolAVL<T>::altura() {
     //recurrente en el arbol
     if(this->esVacio())
         return -1;
@@ -37,7 +37,7 @@ int ArbolBinarioOrd<T>::altura() {
 }
 
 template< class T >
-int ArbolBinarioOrd<T>::altura(NodoBinario<T>* nodo) {
+int ArbolAVL<T>::altura(NodoBinario<T>* nodo) {
     int valt;
 
     if(nodo->esHoja()){
@@ -59,7 +59,7 @@ int ArbolBinarioOrd<T>::altura(NodoBinario<T>* nodo) {
 
 //recurrente
 template< class T >
-int ArbolBinarioOrd<T>::tamano() {
+int ArbolAVL<T>::tamano() {
     //recurrente en el arbol
     if(this->esVacio())
         return 0;
@@ -68,7 +68,7 @@ int ArbolBinarioOrd<T>::tamano() {
 }
 
 template< class T >
-int ArbolBinarioOrd<T>::tamano(NodoBinario<T>* nodo) {
+int ArbolAVL<T>::tamano(NodoBinario<T>* nodo) {
     int tam = 1;
 
     if (nodo->obtenerHijoIzq() != NULL)
@@ -82,7 +82,7 @@ int ArbolBinarioOrd<T>::tamano(NodoBinario<T>* nodo) {
 
 //iterativo
 template< class T >
-bool ArbolBinarioOrd<T>::insertar(T val) {
+bool ArbolAVL<T>::insertar(T val) {
     NodoBinario<T>* nodo = this->raiz;
     NodoBinario<T>* padre = this->raiz;
     bool insertado = false;
@@ -110,12 +110,13 @@ bool ArbolBinarioOrd<T>::insertar(T val) {
         }
         insertado = true;
     }
+    balanceo(padre);
     return insertado;
 }
 
 //iterativo
 template< class T >
-bool ArbolBinarioOrd<T>::eliminar(T val) {
+bool ArbolAVL<T>::eliminar(T val) {
     NodoBinario<T>* nodo = this->raiz;
     NodoBinario<T>* padre = NULL;
     bool encontrado = false;
@@ -186,13 +187,13 @@ bool ArbolBinarioOrd<T>::eliminar(T val) {
             delete max;
         }
     }
-
+    balanceo(padre);
     return encontrado;
 }
 
 //iterativo
 template< class T >
-bool ArbolBinarioOrd<T>::buscar(T val) {
+bool ArbolAVL<T>::buscar(T val) {
     NodoBinario<T>* nodo = this->raiz;
     bool encontrado = false;
 
@@ -211,13 +212,13 @@ bool ArbolBinarioOrd<T>::buscar(T val) {
 
 //recurrente
 template< class T >
-void ArbolBinarioOrd<T>::preOrden() {
+void ArbolAVL<T>::preOrden() {
     if (!this->esVacio())
         this->preOrden(this->raiz);
 }
 
 template< class T >
-void ArbolBinarioOrd<T>::preOrden(NodoBinario<T>* nodo) {
+void ArbolAVL<T>::preOrden(NodoBinario<T>* nodo) {
     if (nodo != NULL) {
         std::cout << nodo->obtenerDato() << " ";
         this->preOrden(nodo->obtenerHijoIzq());
@@ -227,14 +228,14 @@ void ArbolBinarioOrd<T>::preOrden(NodoBinario<T>* nodo) {
 
 //recurrente
 template< class T >
-void ArbolBinarioOrd<T>::inOrden() {
+void ArbolAVL<T>::inOrden() {
     if (!this->esVacio())
         this->inOrden(this->raiz);
 
 }
 
 template< class T >
-void ArbolBinarioOrd<T>::inOrden(NodoBinario<T>* nodo) {
+void ArbolAVL<T>::inOrden(NodoBinario<T>* nodo) {
     if (nodo != NULL){
     this->inOrden(nodo->obtenerHijoIzq());
     std::cout << nodo->obtenerDato() << " ";
@@ -245,13 +246,13 @@ void ArbolBinarioOrd<T>::inOrden(NodoBinario<T>* nodo) {
 
 //recurrente
 template< class T >
-void ArbolBinarioOrd<T>::posOrden() {
+void ArbolAVL<T>::posOrden() {
     if (!this->esVacio())
         this->posOrden(this->raiz);   
 }
 
 template< class T >
-void ArbolBinarioOrd<T>::posOrden(NodoBinario<T>* nodo) {
+void ArbolAVL<T>::posOrden(NodoBinario<T>* nodo) {
     if (nodo != NULL) {
         this->posOrden(nodo->obtenerHijoIzq());
         this->posOrden(nodo->obtenerHijoDer());
@@ -278,3 +279,46 @@ void ArbolAVL<T>::nivelOrden() {
 
     }
 }
+NodoBinario<T>* ArbolAVL<T>::rotacionIzq(NodoBinario<T>* nodo) {
+    NodoBinario<T>* padre = nodo->obtenerHijoDer();
+    nodo->fijarHijoDer(padre->obtenerHijoIzq());
+    padre->fijarHijoIzq(nodo);  if()
+    return padre;
+}
+
+NodoBinario<T>* ArbolAVL<T>::rotacionDer(NodoBinario<T>* nodo) {
+    NodoBinario<T>* padre = nodo->obtenerHijoIzq();
+    nodo->fijarHijoIzq(padre->obtenerHijoDer());
+    padre->fijarHijoDer(nodo);
+    return padre;
+}
+NodoBinario<T>* ArbolAVL<T>::rotacionIzqDer(NodoBinario<T>* nodo) {
+    NodoBinario<T>* aux = rotacionIzq(nodo->obtenerHijoIzq());
+    nodo->fijarHijoIzq(aux);
+    NodoBinario<T>* padre = rotacionDer(nodo);
+    return padre;
+}
+
+NodoBinario<T>* ArbolAVL<T>::rotacionDerIzq(NodoBinario<T>* nodo) {
+    NodoBinario<T>* aux = rotacionDer(nodo->obtenerHijoDer());
+    nodo->fijarHijoDer(aux);
+    NodoBinario<T>* padre = rotacionIzq(nodo);
+    return padre;
+}
+
+void ArbolAVL<T>::balanceo(NodoBinario<T>* nodo) {
+    if(nodo->diferenciaAltura() == 2){
+        if(nodo->diferenciaAltura() > 0){
+            nodo = this->rotacionDer(nodo);
+        }else if(nodo->diferenciaAltura() < 0){
+            nodo = this->rotacionIzqDer(nodo);
+        }
+    }else if(nodo->diferenciaAltura() == -2){
+        if(nodo->diferenciaAltura() < 0){
+            nodo = this->rotacionIzq(nodo);
+        }else if(nodo->diferenciaAltura() > 0){
+            nodo = this->rotacionDerIzq(nodo);
+        }
+    }
+}
+
