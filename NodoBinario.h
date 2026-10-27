@@ -5,6 +5,7 @@ template< class T >
 class NodoBinario {
     protected:
         T dato;
+        int altura;
         NodoBinario<T>* hijoIzq;
         NodoBinario<T>* hijoDer;
     public:
@@ -18,7 +19,9 @@ class NodoBinario {
         void fijarHijoIzq(NodoBinario<T>* izq);
         void fijarHijoDer(NodoBinario<T>* der);
         bool esHoja();
-        T diferenciaAltura();
+        int obtenerAltura();
+        void fijarAltura();
+        int diferenciaAltura();
 };
 
 #include "NodoBinario.hxx"

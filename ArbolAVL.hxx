@@ -1,6 +1,6 @@
 #include "ArbolAVL.h"
 #include <queue>
-
+#include <iostream>
 template< class T >
 ArbolAVL<T>::ArbolAVL() {
     this->raiz = NULL;
@@ -29,32 +29,12 @@ T ArbolAVL<T>::datoRaiz() {
 //recurrente
 template< class T >
 int ArbolAVL<T>::altura() {
-    //recurrente en el arbol
-    if(this->esVacio())
-        return -1;
-    else
-        return this->altura(this->raiz);
+    return this->altura(this->raiz);
 }
 
 template< class T >
 int ArbolAVL<T>::altura(NodoBinario<T>* nodo) {
-    int valt;
-
-    if(nodo->esHoja()){
-        valt=0;
-    }else {
-        int valt_izq = -1;
-        int valt_der = -1;
-        if (nodo->obtenerHijoIzq() != NULL)
-            valt_izq = this->altura(nodo->obtenerHijoIzq());
-        if (nodo->obtenerHijoDer() != NULL)
-            valt_der = this->altura(nodo->obtenerHijoDer());
-        if (valt_izq > valt_der)
-            valt = valt_izq + 1;
-        else
-            valt = valt_der + 1;
-    }
-    return valt; 
+    return (nodo == NULL) ? -1 : nodo->obtenerAltura();
 }
 
 //recurrente
@@ -79,8 +59,31 @@ int ArbolAVL<T>::tamano(NodoBinario<T>* nodo) {
     return tam;
 }
     
+template< class T >
+bool ArbolAVL<T>::insertar(T val) {
+    bool insertado = false;
+    this->raiz = this->insertar(this->raiz, val, insertado); 
+    return insertado;
+}
 
-//iterativo
+template< class T >
+NodoBinario<T>* ArbolAVL<T>::insertar(NodoBinario<T>* nodo, T val, bool& insertado) {
+    if (nodo == NULL) {                   
+        insertado = true;
+        return new NodoBinario<T>(val);
+    }
+
+    if (val < nodo->obtenerDato())
+        nodo->fijarHijoIzq(this->insertar(nodo->obtenerHijoIzq(), val, insertado));
+    else if (val > nodo->obtenerDato())
+        nodo->fijarHijoDer(this->insertar(nodo->obtenerHijoDer(), val, insertado));
+    else
+        return nodo; 
+
+    return this->balanceo(nodo);
+}
+
+/*iterativo
 template< class T >
 bool ArbolAVL<T>::insertar(T val) {
     NodoBinario<T>* nodo = this->raiz;
@@ -112,9 +115,50 @@ bool ArbolAVL<T>::insertar(T val) {
     }
     balanceo(padre);
     return insertado;
+}*/
+
+template< class T >
+bool ArbolAVL<T>::eliminar(T val) {
+    bool eliminado = false;
+    this->raiz = this->eliminar(this->raiz, val, eliminado);
+    return eliminado;
 }
 
-//iterativo
+template< class T >
+NodoBinario<T>* ArbolAVL<T>::eliminar(NodoBinario<T>* nodo, T val, bool& eliminado) {
+    if (nodo == NULL)
+        return NULL;       
+
+    if (val < nodo->obtenerDato()) {
+        nodo->fijarHijoIzq(this->eliminar(nodo->obtenerHijoIzq(), val, eliminado));
+    } else if (val > nodo->obtenerDato()) {
+        nodo->fijarHijoDer(this->eliminar(nodo->obtenerHijoDer(), val, eliminado));
+    } else {
+        eliminado = true;
+        NodoBinario<T>* izq = nodo->obtenerHijoIzq();
+        NodoBinario<T>* der = nodo->obtenerHijoDer();
+
+        if (izq == NULL || der == NULL) { 
+            NodoBinario<T>* hijo = (izq != NULL) ? izq : der;
+            nodo->fijarHijoIzq(NULL);       
+            nodo->fijarHijoDer(NULL);
+            delete nodo;
+            return hijo;          
+        }
+
+  
+        NodoBinario<T>* max = izq;
+        while (max->obtenerHijoDer() != NULL)
+            max = max->obtenerHijoDer();
+        nodo->fijarDato(max->obtenerDato());
+
+        bool aux;                          
+        nodo->fijarHijoIzq(this->eliminar(izq, nodo->obtenerDato(), aux));
+    }
+
+    return this->balanceo(nodo);
+}
+/*iterativo
 template< class T >
 bool ArbolAVL<T>::eliminar(T val) {
     NodoBinario<T>* nodo = this->raiz;
@@ -189,7 +233,7 @@ bool ArbolAVL<T>::eliminar(T val) {
     }
     balanceo(padre);
     return encontrado;
-}
+}*/
 
 //iterativo
 template< class T >
@@ -279,46 +323,68 @@ void ArbolAVL<T>::nivelOrden() {
 
     }
 }
+template< class T >
 NodoBinario<T>* ArbolAVL<T>::rotacionIzq(NodoBinario<T>* nodo) {
     NodoBinario<T>* padre = nodo->obtenerHijoDer();
     nodo->fijarHijoDer(padre->obtenerHijoIzq());
-    padre->fijarHijoIzq(nodo);  if()
+    padre->fijarHijoIzq(nodo);
+    nodo->fijarAltura();
+    padre->fijarAltura(); 
     return padre;
 }
-
+template< class T >
 NodoBinario<T>* ArbolAVL<T>::rotacionDer(NodoBinario<T>* nodo) {
     NodoBinario<T>* padre = nodo->obtenerHijoIzq();
     nodo->fijarHijoIzq(padre->obtenerHijoDer());
     padre->fijarHijoDer(nodo);
+    nodo->fijarAltura();
+    padre->fijarAltura(); 
     return padre;
 }
+template< class T >
 NodoBinario<T>* ArbolAVL<T>::rotacionIzqDer(NodoBinario<T>* nodo) {
     NodoBinario<T>* aux = rotacionIzq(nodo->obtenerHijoIzq());
     nodo->fijarHijoIzq(aux);
     NodoBinario<T>* padre = rotacionDer(nodo);
     return padre;
 }
-
+template< class T >
 NodoBinario<T>* ArbolAVL<T>::rotacionDerIzq(NodoBinario<T>* nodo) {
     NodoBinario<T>* aux = rotacionDer(nodo->obtenerHijoDer());
     nodo->fijarHijoDer(aux);
     NodoBinario<T>* padre = rotacionIzq(nodo);
     return padre;
 }
-
-void ArbolAVL<T>::balanceo(NodoBinario<T>* nodo) {
+template< class T >
+NodoBinario<T>* ArbolAVL<T>::balanceo(NodoBinario<T>* nodo) {
+    nodo->fijarAltura();
     if(nodo->diferenciaAltura() == 2){
-        if(nodo->diferenciaAltura() > 0){
-            nodo = this->rotacionDer(nodo);
-        }else if(nodo->diferenciaAltura() < 0){
-            nodo = this->rotacionIzqDer(nodo);
+        if(nodo->obtenerHijoIzq()->diferenciaAltura() >= 0){
+            return this->rotacionDer(nodo);
+        }else{
+            return this->rotacionIzqDer(nodo);
         }
     }else if(nodo->diferenciaAltura() == -2){
-        if(nodo->diferenciaAltura() < 0){
-            nodo = this->rotacionIzq(nodo);
-        }else if(nodo->diferenciaAltura() > 0){
-            nodo = this->rotacionDerIzq(nodo);
+        if(nodo->obtenerHijoDer()->diferenciaAltura() <= 0){
+            return this->rotacionIzq(nodo);
+        }else{
+            return this->rotacionDerIzq(nodo);
         }
     }
+    return nodo;
 }
+template< class T >
+bool ArbolAVL<T>::verificar() { return this->verificar(this->raiz); }
 
+template< class T >
+bool ArbolAVL<T>::verificar(NodoBinario<T>* n) {
+    if (n == NULL) return true;
+    int hi = this->altura(n->obtenerHijoIzq());
+    int hd = this->altura(n->obtenerHijoDer());
+    int esperada = 1 + (hi > hd ? hi : hd);
+    int fb = hi - hd;
+    return n->obtenerAltura() == esperada      // la altura guardada es correcta
+        && fb >= -1 && fb <= 1                 // cumple la propiedad AVL
+        && this->verificar(n->obtenerHijoIzq())
+        && this->verificar(n->obtenerHijoDer());
+}

@@ -4,6 +4,7 @@ template< class T >
 NodoBinario<T>::NodoBinario() {
     this->hijoIzq = NULL;
     this->hijoDer = NULL;
+    this->altura = 0;
 }
 
 template< class T >
@@ -11,6 +12,7 @@ NodoBinario<T>::NodoBinario(T val) {
     this->hijoIzq = NULL;
     this->hijoDer = NULL;
     this->dato = val;
+    this->altura = 0;
 }
 
 template< class T >
@@ -60,8 +62,18 @@ bool NodoBinario<T>::esHoja() {
     return (this->hijoIzq == NULL && this->hijoDer == NULL);
 }
 template< class T >
-T NodoBinario<T>::diferenciaAltura() {
-    int alturaIzq = (this->hijoIzq != NULL) ? this->hijoIzq->diferenciaAltura() : 0;
-    int alturaDer = (this->hijoDer != NULL) ? this->hijoDer->diferenciaAltura() : 0;
+int NodoBinario<T>::diferenciaAltura() {
+    int alturaIzq = (this->hijoIzq != NULL) ? this->hijoIzq->altura : -1;
+    int alturaDer = (this->hijoDer != NULL) ? this->hijoDer->altura : -1;
     return alturaIzq - alturaDer;
+}
+template< class T >
+int NodoBinario<T>::obtenerAltura(){
+    return this->altura;
+}
+template< class T >
+void NodoBinario<T>::fijarAltura(){
+    int alturaIzq = (this->hijoIzq != NULL) ? this->hijoIzq->altura : -1;
+    int alturaDer = (this->hijoDer != NULL) ? this->hijoDer->altura : -1;
+    this->altura = 1 + (alturaIzq > alturaDer ? alturaIzq : alturaDer);
 }

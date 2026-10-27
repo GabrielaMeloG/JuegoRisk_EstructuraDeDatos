@@ -57,7 +57,7 @@ bool ArbolGeneral<T>::insertarNodo(T padre, T n){
     return this->insertarNodo(this->raiz, padre, n);
 
 }
-
+}
 template <class T>
 bool ArbolGeneral<T>::insertarNodo(NodoGeneral<T>* actual, T padre, T n){
     bool insertado = false;
@@ -153,18 +153,17 @@ bool ArbolGeneral<T>::buscar(NodoGeneral<T>* nodo, T n){
 }
 
 template <class T>
-int ArbolGeneral<T>::altura(){
+unsigned int ArbolGeneral<T>::altura(){
     if (this->esVacio()){
         return -1;
     } else {
         return this->altura(this->raiz);
     }
-
 }
 
 template <class T>
-int ArbolGeneral<T>::altura(NodoGeneral<T>* nodo){
-    int alt = -1;
+unsigned int ArbolGeneral<T>::altura(NodoGeneral<T>* nodo){
+    unsigned int alt = -1;
 
     if (nodo->EsHoja()){
         alt = 0;

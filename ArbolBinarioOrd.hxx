@@ -261,7 +261,7 @@ void ArbolBinarioOrd<T>::posOrden(NodoBinario<T>* nodo) {
 
 //iterativa, cola
 template< class T >
-void ArbolAVL<T>::nivelOrden() {
+void ArbolBinarioOrd<T>::nivelOrden() {
     if (!this->esVacio()) {
         std::queue< NodoBinario<T>*> cola;
         cola.push(this->raiz);
