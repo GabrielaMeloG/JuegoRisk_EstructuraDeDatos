@@ -8,15 +8,8 @@
 #include <limits> //esta libreria esta aqui para todas las partes en donde se utiliza std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n') , esto fue propuesto por chat para solucionar el problema de que al usar el cin, quedaba un \n en el buffer 
 
 // Prototipos de las funciones auxiliares de guardar 
-static bool terminaEnBin(const std::string& nombre);
-static std::string generarTextoPartida(EstadoJuego &estado, Tablero &tablero);
-static bool leerEntero(std::istream& in, uint64_t& valor, int bytes);
-bool leerComprimido(std::string& nombreArchivo, std::string& contenido);
-bool guardarComprimido(std::string& nombreArchivo, std::string& contenido);
-void contarFrecuencias(const std::string& texto, uint64_t frecuencias[256]);
-
-
-
+bool terminaEnBin(const std::string& nombre);
+std::string generarTextoPartida(EstadoJuego &estado, Tablero &tablero);
 
 //Esta funcion de validar estructura se le pidio a claude utilizando un prompt en el que tomaba en cuenta la estructura del documento de 
 //inicializacion para generar una funcion que validara su estructura al completo.
@@ -127,7 +120,8 @@ void EjecutorConfig::inicializarJuego(EstadoJuego &estado, std::vector<std::stri
     std::string ruta=tokens[1];
     std::string contenido;
     if(terminaEnBin(ruta)){
-        if(!leerComprimido(ruta, contenido)){
+        ArbolHuffman arbol;
+        if(!arbol.leer(ruta, contenido)){
             std::cout << "Error al leer el archivo: " << ruta << std::endl;
             return;
         }
@@ -727,7 +721,8 @@ void EjecutorConfig::guardar_comprimido(EstadoJuego &estado, std::vector<std::st
         nombre = nombre + ".bin";   // el archivo comprimido siempre lleva extension .bin
     }
     std::string texto = generarTextoPartida(estado, tablero);
-    if(guardarComprimido(nombre, texto)){
+    ArbolHuffman arbol;
+    if(arbol.guardar(nombre, texto)){
         std::cout << "La partida ha sido codificada y guardada correctamente." << std::endl;
         if(nombre != tokens[1]){
             std::cout << "Archivo: " << nombre << std::endl;
@@ -771,163 +766,27 @@ void EjecutorConfig::conquistaMasBarata(EstadoJuego &estado, std::vector<std::st
         std::cout << "El territorio mas barato de conquistar para el jugador " << tokens[1] << " es el territorio XYZ con un costo de 3 unidades." << std::endl;
     }
 }
-// Dice si el nombre del archivo termina en ".bin"
-static bool terminaEnBin(const std::string& nombre){
+
+bool terminaEnBin(const std::string& nombre){
     return nombre.size() >= 4 && nombre.compare(nombre.size() - 4, 4, ".bin") == 0;
 }
 
-// Arma el texto de la partida con el mismo formato del archivo de inicializacion:
-// N, una linea por jugador (nombre color) y una linea por territorio (codigo color unidades).
-// Lo usan guardar y guardar_comprimido, asi los dos archivos tienen exactamente el mismo contenido.
-static std::string generarTextoPartida(EstadoJuego &estado, Tablero &tablero){
+std::string generarTextoPartida(EstadoJuego &estado, Tablero &tablero){
     std::ostringstream texto;
     std::vector<Jugador>& jugadores = estado.getJugadores();
+    std::vector<Jugador>::iterator itJugador;
     texto << jugadores.size() << "\n";
-    for(size_t i = 0; i < jugadores.size(); i++){
-        texto << jugadores[i].getNombre() << " " << jugadores[i].getColor() << "\n";
+    for(itJugador = jugadores.begin(); itJugador != jugadores.end(); itJugador++){
+        texto << itJugador->getNombre() << " " << itJugador->getColor() << "\n";
     }
     std::vector<Continente>& continentes = tablero.getContinentes();
-    for(size_t i = 0; i < continentes.size(); i++){
-        std::vector<Territorio>& territorios = continentes[i].getTerritorios();
-        for(size_t j = 0; j < territorios.size(); j++){
-            texto << territorios[j].getCodigo() << " " << territorios[j].getColorOcupante() << " " << territorios[j].getUnidades() << "\n";
+    std::vector<Continente>::iterator itContinente;
+    for(itContinente = continentes.begin(); itContinente != continentes.end(); itContinente++){
+        std::vector<Territorio>& territorios = itContinente->getTerritorios();
+        std::vector<Territorio>::iterator itTerritorio;
+        for(itTerritorio = territorios.begin(); itTerritorio != territorios.end(); itTerritorio++){
+            texto << itTerritorio->getCodigo() << " " << itTerritorio->getColorOcupante() << " " << itTerritorio->getUnidades() << "\n";
         }
     }
     return texto.str();
 }
-// Pasa los bytes a una cadena de '0' y '1': cada byte da 8 caracteres
-static std::string desempaquetar(std::vector<unsigned char>& bytes){
-  std::string bits = "";
-  for (std::size_t i = 0; i < bytes.size(); i++) {
-    int valor = bytes[i];
-    std::string ocho = "00000000";
-    for (int j = 7; j >= 0; j--) {            // de derecha a izquierda: valor % 2 es el bit
-      if (valor % 2 == 1) ocho[j] = '1';
-      valor = valor / 2;
-    }
-    bits += ocho;
-  }
-  return bits;
-}
- 
-static void escribirEntero(std::ostream& out, uint64_t valor, int bytes) {
-  for (int i = 0; i < bytes; i++) {           // primero el byte menos significativo
-    out.put(static_cast<char>(valor % 256));
-    valor = valor / 256;
-  }
-}
-bool leerComprimido(std::string& nombreArchivo, std::string& contenido) {
-  contenido = "";
-  std::ifstream in(nombreArchivo.c_str(), std::ios::binary);
-  if (!in) return false;
- 
-  uint64_t n = 0, w = 0;
-  if (!leerEntero(in, n, 2)) return false;
-  if (n > 256) return false;
- 
-  uint64_t frec[256];
-  for (int c = 0; c < 256; c++) frec[c] = 0;
- 
-  uint64_t suma = 0;
-  int anterior = -1;                                      // los caracteres vienen en orden ascendente
-  for (uint64_t i = 0; i < n; i++) {
-    uint64_t c = 0, f = 0;
-    if (!leerEntero(in, c, 1)) return false;
-    if (!leerEntero(in, f, 8)) return false;
-    if (f == 0 || static_cast<int>(c) <= anterior) return false;
-    anterior = static_cast<int>(c);
-    frec[c] = f;
-    suma = suma + f;
-  }
-  if (!leerEntero(in, w, 8)) return false;
-  if (suma != w) return false;                            // las frecuencias deben sumar w
- 
-  std::vector<unsigned char> bytes;
-  int c = in.get();
-  while (in) {
-    bytes.push_back(static_cast<unsigned char>(c));
-    c = in.get();
-  }
- 
-  if (n == 0) return w == 0;
-  ArbolHuffman arbol;
-  if (!arbol.construir(frec)) return false;
-  std::string bits = desempaquetar(bytes);
-  return arbol.decodificar(bits, w, contenido);
-}
-static void empaquetar(const std::string& bits, std::vector<unsigned char>& bytes) {
-  bytes.clear();
-  int actual = 0;
-  int usados = 0;
-  for (std::size_t i = 0; i < bits.size(); i++) {
-    actual = actual * 2;
-    if (bits[i] == '1') actual = actual + 1;
-    usados++;
-    if (usados == 8) {
-      bytes.push_back(static_cast<unsigned char>(actual));
-      actual = 0;
-      usados = 0;
-    }
-  }
-  if (usados > 0) {                           // completar el ultimo byte con ceros
-    while (usados < 8) {
-      actual = actual * 2;
-      usados++;
-    }
-    bytes.push_back(static_cast<unsigned char>(actual));
-  }
-}
- 
-static bool leerEntero(std::istream& in, uint64_t& valor, int bytes) {
-  valor = 0;
-  uint64_t peso = 1;
-  for (int i = 0; i < bytes; i++) {
-    int c = in.get();
-    if (!in) return false;                    // se acabo el archivo antes de tiempo
-    valor = valor + c * peso;
-    peso = peso * 256;
-  }
-  return true;
-}
-bool guardarComprimido(std::string& nombreArchivo, std::string& contenido) {
-  uint64_t frec[256];
-  contarFrecuencias(contenido, frec);
- 
-  int n = 0;
-  for (int c = 0; c < 256; c++)
-    if (frec[c] > 0) n++;
- 
-  std::vector<unsigned char> bytes;
-  if (n > 0) {
-    ArbolHuffman arbol;
-    std::string bits;
-    if (!arbol.construir(frec)) return false;
-    if (!arbol.codificar(contenido, bits)) return false;
-    empaquetar(bits, bytes);
-  }
- 
-  std::ofstream out(nombreArchivo.c_str(), std::ios::binary);
-  if (!out) return false;
- 
-  escribirEntero(out, static_cast<uint64_t>(n), 2);                              // n
-  for (int c = 0; c < 256; c++) {
-    if (frec[c] > 0) {
-      escribirEntero(out, static_cast<uint64_t>(c), 1);                          // ci
-      escribirEntero(out, frec[c], 8);                    // fi
-    }
-  }
-  escribirEntero(out, static_cast<uint64_t>(contenido.size()), 8);               // w
-  for (std::size_t i = 0; i < bytes.size(); i++)
-    out.put(static_cast<char>(bytes[i]));                                    // binary_code
- 
-  out.close();
-  return !out.fail();
-}
-void contarFrecuencias(const std::string& texto, uint64_t frecuencias[256]) {
-  for (int i = 0; i < 256; i++) frecuencias[i] = 0;
-  for (std::size_t i = 0; i < texto.size(); i++) {
-    unsigned char c = static_cast<unsigned char>(texto[i]);   // asi el caracter queda entre 0 y 255
-    frecuencias[c]++;
-  }
-}
- 
