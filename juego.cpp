@@ -170,16 +170,18 @@ void Jugador::agregarUnidades(int cantidad) {
 void Jugador::eliminarUnidades(int cantidad) {
     unidades -= cantidad;
 }
+
+// Corregido con ayuda de Claude ya que antes el mensaje se imprimia por cada territorio revisado; ahora solo se imprime si no lo encuentra en toda la lista
 void Jugador::eliminarTerritorio(std::string codigo) {
     std::vector<Territorio>::iterator it;
     for(it = territoriosOcupados.begin(); it != territoriosOcupados.end(); ++it) {
         if(it->getCodigo() == codigo) {
             territoriosOcupados.erase(it);
-            break;
-        }else{
-            std::cout << "El jugador no posee el territorio con codigo: " << codigo << std::endl;
+            return;
         }
     }
+
+    std::cout << "El jugador no posee el territorio con codigo: " << codigo << std::endl;
 }
 std::string Jugador::getColor() {
     return color;
@@ -228,7 +230,7 @@ void Tablero::agregarUnidadesTerritorio(std::string codigoTerritorio, int cantid
     std::vector<Continente>::iterator itContinente;
     std::vector<Territorio>::iterator itTerritorio;
     for(itContinente = continentes.begin(); itContinente != continentes.end(); itContinente++){
-        std::vector<Territorio> territorios = itContinente->getTerritorios();
+        std::vector<Territorio>& territorios = itContinente->getTerritorios();
         for(itTerritorio = territorios.begin(); itTerritorio != territorios.end(); itTerritorio++){
             if(itTerritorio->getCodigo() == codigoTerritorio){
                 itTerritorio->setUnidades(itTerritorio->getUnidades() + cantidad);
@@ -346,7 +348,7 @@ Territorio& Tablero::getTerritorio(std::string codigoTerritorio){
     std::vector<Continente>::iterator itContinente;
     std::vector<Territorio>::iterator itTerritorio;
     for(itContinente = continentes.begin(); itContinente != continentes.end(); itContinente++){
-        std::vector<Territorio> territorios = itContinente->getTerritorios();
+        std::vector<Territorio>& territorios = itContinente->getTerritorios();
         for(itTerritorio = territorios.begin(); itTerritorio != territorios.end(); itTerritorio++){
             if(itTerritorio->getCodigo() == codigoTerritorio){
                 return *itTerritorio;

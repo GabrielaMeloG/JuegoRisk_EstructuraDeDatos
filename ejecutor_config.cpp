@@ -7,6 +7,16 @@
 #include <ctime> 
 #include <limits> //esta libreria esta aqui para todas las partes en donde se utiliza std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n') , esto fue propuesto por chat para solucionar el problema de que al usar el cin, quedaba un \n en el buffer 
 
+// Prototipos de las funciones auxiliares de guardar 
+static bool terminaEnBin(const std::string& nombre);
+static std::string generarTextoPartida(EstadoJuego &estado, Tablero &tablero);
+static bool leerEntero(std::istream& in, uint64_t& valor, int bytes);
+bool leerComprimido(std::string& nombreArchivo, std::string& contenido);
+bool guardarComprimido(std::string& nombreArchivo, std::string& contenido);
+void contarFrecuencias(const std::string& texto, uint64_t frecuencias[256]);
+
+
+
 
 //Esta funcion de validar estructura se le pidio a claude utilizando un prompt en el que tomaba en cuenta la estructura del documento de 
 //inicializacion para generar una funcion que validara su estructura al completo.
@@ -426,6 +436,13 @@ void EjecutorConfig::atacar(EstadoJuego &estado, std::vector<std::string> &token
         std::cout << "Que territorio desea atacar? (Ingrese el codigo del territorio)" << std::endl;
         std::cin >> territorioId;
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+      
+        while(!tablero.existeTerritorioEnMapa(territorioId)){
+            std::cout << "El territorio " << territorioId << " no existe." << std::endl;
+            std::cout << "Que territorio desea atacar? (Ingrese el codigo del territorio)" << std::endl;
+            std::cin >> territorioId;
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        }
         Territorio& territorioDefensor = tablero.getTerritorio(territorioId);
         if(jugadores[estado.getTurno()].poseeTerritorio(territorioId)){
             std::cout << " no se puede atacar un territorio que ya esta conquistado" << std::endl;
@@ -456,40 +473,45 @@ void EjecutorConfig::atacar(EstadoJuego &estado, std::vector<std::string> &token
                 if(territorioDefensor.getUnidades()==0){
                     
                     std::cout << "El territorio " << territorioDefensor.getNombre() << " ha sido conquistado por " << tokens[1] << std::endl;
-                    int cantidad;
-                    do{
-                    std::cout << "Cuantas unidades desea mover a ese territorio?"<<std::endl;
-                    std::cin>>cantidad;
-                    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-                    }while(cantidad < territorioAtacante.getUnidades());
-                    Jugador* defensor = nullptr; //Esta solucion fue dada por claude al preguntarle sobre un error de compilacion, propuso esta solucion para utilizar la variable como referencia y no como copia
-                    for(Jugador& j : jugadores){
-                        if(territorioDefensor.getColorOcupante() == j.getColor()){
-                            defensor = &j;
-                            break;
+                        int maximo = territorioAtacante.getUnidades() - 1;
+                        int cantidad = 0;
+                        do{
+                            std::cout << "Cuantas unidades desea mover a ese territorio? (entre 1 y " << maximo << ")" << std::endl;
+                            std::cin >> cantidad;
+                            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                            if(cantidad < 1 || cantidad > maximo){
+                                std::cout << "Cantidad no valida. Debe mover entre 1 y " << maximo << " unidades." << std::endl;
+                            }
+                        }while(cantidad < 1 || cantidad > maximo);
+
+                        Jugador* defensor = nullptr; //Esta solucion fue dada por claude al preguntarle sobre un error de compilacion, propuso esta solucion para utilizar la variable como referencia y no como copia
+                        for(Jugador& j : jugadores){
+                            if(territorioDefensor.getColorOcupante() == j.getColor()){
+                                defensor = &j;
+                                break;
+                            }   
+                        }
+                        if(defensor != nullptr){ 
+                            defensor->eliminarTerritorio(territorioDefensor.getCodigo());
+                        }
+                        territorioDefensor.setColorOcupante(jugadores[estado.getTurno()].getColor());
+                        territorioDefensor.setUnidades(territorioDefensor.getUnidades()+cantidad);
+                        territorioAtacante.setUnidades(territorioAtacante.getUnidades()-cantidad);
+                        jugadores[estado.getTurno()].agegarTerritorio(territorioDefensor);
+                        jugadores[estado.getTurno()].agregarCarta(baraja.tomarCarta());
+                        std::cout << "El territorio " << territorioDefensor.getNombre() << " ahora es de " << tokens[1] << " con " << territorioDefensor.getUnidades() << " unidades. " << territorioAtacante.getNombre() << " queda con " << territorioAtacante.getUnidades() << " unidades." << std::endl;
+                        std::cout << tokens[1] << " recibe una carta por conquistar un territorio." << std::endl;
+                        if (estado.Victoria(jugadores[estado.getTurno()])) {
+                            std::cout << jugadores[estado.getTurno()].getNombre() << " ha conquistado todos los territorios y GANA LA PARTIDA" << std::endl;
+                            estado.setTerminado(true);
+                            return; 
                         }
                     }
-                    if(defensor != nullptr){ 
-                    defensor->eliminarTerritorio(territorioDefensor.getCodigo());
-                    territorioDefensor.setColorOcupante(jugadores[estado.getTurno()].getColor());
-                    territorioDefensor.setUnidades(territorioDefensor.getUnidades()+cantidad);
-                    territorioAtacante.setUnidades(territorioAtacante.getUnidades()-cantidad);
-                    jugadores[estado.getTurno()].agegarTerritorio(territorioDefensor);
-                    jugadores[estado.getTurno()].agregarCarta(baraja.tomarCarta());
-                    continue;
-                    }
-                    if (estado.Victoria(jugadores[estado.getTurno()])) {
-                        std::cout << jugadores[estado.getTurno()].getNombre() << " ha conquistado todos los territorios y GANA LA PARTIDA" << std::endl;
-                        estado.setTerminado(true);
-                        return; 
-                    }
-                }
             }else{
                 std::cout << "Resultado: el defensor gana el enfrentamiento. El atacante pierde 1 unidad." << std::endl;
                 territorioAtacante.setUnidades(territorioAtacante.getUnidades()-1);
                 if(territorioAtacante.getUnidades()==1){
-                    std::cout << "El territorio " << territorioDefensor.getNombre() << " ya no puede atacar mas al quedarse con solo 1 unidad" << std::endl;
-                    continue;
+                    std::cout << "El territorio " << territorioAtacante.getNombre() << " ya no puede atacar mas al quedarse con solo 1 unidad" << std::endl;
                 }
             }
 
@@ -497,6 +519,8 @@ void EjecutorConfig::atacar(EstadoJuego &estado, std::vector<std::string> &token
             std::cout << "El territorio seleccionado no es adyacente al territorio atacante"<<std::endl;
             continue;
         }    
+        }else if(!tablero.existeTerritorioEnMapa(territorioId)){
+            std::cout << "El territorio " << territorioId << " no existe." << std::endl;
         }else{
             std::cout << "El jugador " << tokens[1] << " no es dueño de este territorio" << std::endl;
         }
@@ -505,6 +529,7 @@ void EjecutorConfig::atacar(EstadoJuego &estado, std::vector<std::string> &token
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         }while(pasarAMinusculas(respuesta) != "no");
         jugadores[estado.getTurno()].setHaAtacado(true);
+        std::cout << "El jugador " << tokens[1] << " ha terminado de atacar." << std::endl;
     }
     
 }
