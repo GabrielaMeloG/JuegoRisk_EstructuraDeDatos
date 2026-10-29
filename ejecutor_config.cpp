@@ -718,7 +718,7 @@ void EjecutorConfig::guardar_comprimido(EstadoJuego &estado, std::vector<std::st
     }
     std::string nombre = tokens[1];
     if(!terminaEnBin(nombre)){
-        nombre = nombre + ".bin";   // el archivo comprimido siempre lleva extension .bin
+        nombre = nombre + ".bin";
     }
     std::string texto = generarTextoPartida(estado, tablero);
     ArbolHuffman arbol;
