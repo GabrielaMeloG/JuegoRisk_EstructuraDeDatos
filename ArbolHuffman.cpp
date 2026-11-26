@@ -33,7 +33,7 @@ bool ArbolHuffman::construir(uint64_t frecuencias[256]) {
     if (frecuencias[s] > 0) {
         Q.push_back(new NodoHuffman(static_cast<unsigned char>(s), frecuencias[s], static_cast<unsigned int>(s)));
         std::push_heap(Q.begin(), Q.end(), comparador);  
-    }
+    } 
   if (Q.empty())
     return false;
 

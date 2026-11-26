@@ -5,6 +5,7 @@
 #include <fstream>
 #include <cstdlib> 
 #include <ctime> 
+#include <sstream>
 #include <limits> //esta libreria esta aqui para todas las partes en donde se utiliza std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n') , esto fue propuesto por chat para solucionar el problema de que al usar el cin, quedaba un \n en el buffer 
 
 // Prototipos de las funciones auxiliares de guardar 
@@ -662,7 +663,7 @@ void EjecutorConfig::ayuda(EstadoJuego &estado, std::vector<std::string> &tokens
         "estado_juego",
         "guardar archivo",
         "guardar_comprimido archivo",
-        "costo_conquista nombre_jugador territorio",
+        "costo_conquista nombre_jugador territorio (nombre o codigo, ej: Alaska o 1.1)",
         "conquista_mas_barata nombre_jugador"
     };
     if(tokens.size() == 1){
@@ -737,16 +738,45 @@ void EjecutorConfig::costoConquista(EstadoJuego &estado, std::vector<std::string
         return;
     }
     if(!estado.getInicializado()){
-        std::cout << "El juego no ha sido inicializado." << std::endl;
+        std::cout << "Esta partida no ha sido inicializada correctamente." << std::endl;
         return;
     }else if(estado.getTerminado()){
-        std::cout << "El juego ya ha terminado." << std::endl;
+        std::cout << "Esta partida ya tuvo un ganador." << std::endl;
         return;
     }else if(!estado.existeJugador(tokens[1])){
         std::cout << "El jugador " << tokens[1] << " no hace parte de esta partida." << std::endl;
-    }else{
-        std::cout << "Para conquistar el territorio "<< tokens[2] <<", "<<tokens[1]<<" debe atacar desde ABC , pasando por el territorio XYZ. Debe conquistar 7 unidades de ejército." << std::endl;
+        return;
     }
+    int destino = tablero.buscarTerritorio(tokens[2]);
+    if(destino == -1){
+        std::cout << "El territorio " << tokens[2] << " no existe." << std::endl;
+        return;
+    }
+    std::string color = estado.getJugadores()[estado.indiceJugador(tokens[1])].getColor();
+    Grafo<std::string>& mapa = tablero.getMapa();
+    if(tablero.getTerritorio(mapa.getNodo(destino)).getColorOcupante() == color){
+        std::cout << "El territorio " << tokens[2] << " ya pertenece a " << tokens[1] << "." << std::endl;
+        return;
+    }
+    std::vector<double> dist;
+    std::vector<int> padre;
+    tablero.dijkstraConquista(color, dist, padre);
+    if(padre[destino] == -1){
+        std::cout << tokens[1] << " no tiene forma de llegar al territorio " << tokens[2] << "." << std::endl;
+        return;
+    }
+    std::vector<int> ruta = mapa.camino(padre, destino);   // ruta[0] = territorio propio desde donde ataca
+    std::cout << "Para conquistar el territorio " << tokens[2] << ", " << tokens[1] << " debe atacar desde " << mapa.getNodo(ruta[0]);
+    if(ruta.size() > 2){
+        std::cout << ", pasando por los territorios ";
+        for(size_t k = 1; k < ruta.size() - 1; k++){
+            std::cout << mapa.getNodo(ruta[k]);
+            if(k < ruta.size() - 2){
+                std::cout << ", ";
+            }
+        }
+    }
+    std::cout << ". Debe conquistar " << dist[destino] << " unidades de ejercito." << std::endl;
 }
 void EjecutorConfig::conquistaMasBarata(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero, Baraja &baraja){
     if(tokens.size() != 2){
@@ -754,17 +784,48 @@ void EjecutorConfig::conquistaMasBarata(EstadoJuego &estado, std::vector<std::st
         return;
     }
     if(!estado.getInicializado()){
-        std::cout << "El juego no ha sido inicializado." << std::endl;
+        std::cout << "Esta partida no ha sido inicializada correctamente." << std::endl;
         return;
     }else if(estado.getTerminado()){
-        std::cout << "El juego ya ha terminado." << std::endl;
+        std::cout << "Esta partida ya tuvo un ganador." << std::endl;
         return;
     }else if(!estado.existeJugador(tokens[1])){
         std::cout << "El jugador " << tokens[1] << " no hace parte de esta partida." << std::endl;
         return;
-    }else{
-        std::cout << "El territorio mas barato de conquistar para el jugador " << tokens[1] << " es el territorio XYZ con un costo de 3 unidades." << std::endl;
     }
+    std::string color = estado.getJugadores()[estado.indiceJugador(tokens[1])].getColor();
+    Grafo<std::string>& mapa = tablero.getMapa();
+    std::vector<double> dist;
+    std::vector<int> padre;
+    tablero.dijkstraConquista(color, dist, padre);         // una sola ejecucion sirve para todos los territorios
+    int mejor = -1;
+    for(int v = 0; v < mapa.cantidadNodos(); v++){
+        if(tablero.getTerritorio(mapa.getNodo(v)).getColorOcupante() != color && padre[v] != -1){
+            if(mejor == -1 || dist[v] < dist[mejor]){
+                mejor = v;
+            }
+        }
+    }
+    if(mejor == -1){
+        std::cout << "No hay territorios que " << tokens[1] << " pueda conquistar." << std::endl;
+        return;
+    }
+    std::vector<int> ruta = mapa.camino(padre, mejor);
+    std::string destino = mapa.getNodo(mejor);
+    std::string nombredestino = tablero.getTerritorio(destino).getNombre();
+    std::string origen = mapa.getNodo(ruta[0]);
+    std::string nombreorigen = tablero.getTerritorio(origen).getNombre();
+    std::cout << "La conquista mas barata es avanzar sobre el territorio " << nombredestino << "(id : " << destino << ") desde el territorio " << nombreorigen<< "(id : " << origen << "). Para conquistar el territorio " << nombredestino << "(id : " << destino << "), debe atacar desde " << nombreorigen << "(id : " << origen << ")";
+    if(ruta.size() > 2){
+        std::cout << ", pasando por los territorios ";
+        for(size_t k = 1; k < ruta.size() - 1; k++){
+            std::cout << mapa.getNodo(ruta[k]);
+            if(k < ruta.size() - 2){
+                std::cout << ", ";
+            }
+        }
+    }
+    std::cout << ". Debe conquistar " << dist[mejor] << " unidades de ejercito." << std::endl;
 }
 
 bool terminaEnBin(const std::string& nombre){

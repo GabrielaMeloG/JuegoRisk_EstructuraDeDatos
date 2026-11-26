@@ -55,6 +55,8 @@ Territorio::Territorio(std::string nombre, std::string id, std::vector<std::stri
     this->nombre = nombre;
     codigo = id;
     territoriosAdyacentes = adyacentes;
+    colorOcupante = " ";
+    unidades = 0;
 }
 Continente::Continente(int id, std::string nombre, std::vector<Territorio> territorios) {
     codigo = id;
@@ -67,6 +69,7 @@ Tablero::Tablero(){
         std::cerr << "No se pudo abrir el archivo de territorios." << std::endl;
         return;
     }
+    cantidadCartasEntregadas = 0;
     std::string linea;
     std::vector<Territorio> territorios;
     while(std::getline(archivo, linea)){
@@ -82,17 +85,43 @@ Tablero::Tablero(){
             std::string codigoTerritorio = tokens[1];
             std::vector<std::string> adyacentes;
             for(size_t i = 2; i < tokens.size(); i++){
-                adyacentes.push_back(tokens[i]);
+                std::string codigo = tokens[i];
+                if(!codigo.empty() && codigo[codigo.size() - 1] == ','){
+                    codigo.erase(codigo.size() - 1);          // "1.6," -> "1.6"
+                }
+                adyacentes.push_back(codigo);
             }
             Territorio territorio(nombreContinente, codigoTerritorio, adyacentes);
             territorios.push_back(territorio);
+            mapa.insertarNodo(codigoTerritorio);       // el nodo guarda solo el codigo
         }
-        
     }
-    
+    construirAristas();                               // nuevo: fronteras cuando ya están todos
 }
 std::vector<Continente>& Tablero::getContinentes() { 
     return continentes; 
+}
+int Tablero::indiceTerritorio(std::string codigo){
+    for(size_t i = 0; i < mapa.getNodos().size(); i++){
+        if(mapa.getNodo(i) == codigo){
+            return i;
+        }
+    }
+    return -1;
+}
+
+void Tablero::construirAristas(){
+    for(size_t i = 0; i < mapa.getNodos().size(); i++){
+        std::vector<std::string> adyacentes = getTerritorio(mapa.getNodo(i)).getTerritoriosAdyacentes();
+        for(size_t k = 0; k < adyacentes.size(); k++){
+            int j = indiceTerritorio(adyacentes[k]);
+            if(j == -1){
+                std::cerr << "Territorio adyacente no encontrado: " << adyacentes[k] << std::endl;
+            }else{
+                mapa.insertarArista(i, j, 1.0);
+            }
+        }
+    }
 }
 std::string Jugador::getNombre(){
     return nombre;
@@ -334,6 +363,8 @@ void Jugador::quitarCartas(int indices[3]) {
 Territorio::Territorio(){
     this->nombre = " ";
     codigo = " ";
+    colorOcupante = " ";
+    unidades = 0;
 }
  bool Territorio::esAdyacente(std::string codigo){
     std::vector<std::string>::iterator it;
@@ -461,4 +492,62 @@ void EstadoJuego::mostrarCodigosYNombres(Tablero& tablero) {
             std::cout << "  " << t.getCodigo() << " - " << t.getNombre() << std::endl;
         }
     }
+}
+Grafo<std::string>& Tablero::getMapa(){
+    return mapa;
+}
+
+// Dijkstra desde TODOS los territorios del color dado (todos arrancan con costo 0).
+// Entrar a un territorio enemigo cuesta sus unidades; a los propios no se entra.
+// El color y las unidades se leen de los continentes (unico lugar donde se guardan).
+void Tablero::dijkstraConquista(std::string color, std::vector<double>& dist, std::vector<int>& padre){
+    int n = mapa.cantidadNodos();
+    double INF = 1000000000;
+    dist.assign(n, INF);
+    padre.assign(n, -1);
+    std::vector<bool> definitivo(n, false);
+    std::vector<std::string> colores(n);              // datos actuales de cada nodo, leidos una vez
+    std::vector<int> unidades(n);
+    for(int i = 0; i < n; i++){
+        Territorio& territorio = getTerritorio(mapa.getNodo(i));
+        colores[i] = territorio.getColorOcupante();
+        unidades[i] = territorio.getUnidades();
+        if(colores[i] == color){
+            dist[i] = 0;
+        }
+    }
+    for(int paso = 0; paso < n; paso++){
+        int u = -1;
+        double menor = INF;
+        for(int v = 0; v < n; v++){
+            if(!definitivo[v] && dist[v] < menor){
+                menor = dist[v];
+                u = v;
+            }
+        }
+        if(u == -1){
+            break;
+        }
+        definitivo[u] = true;
+        for(int v = 0; v < n; v++){
+            if(mapa.existeArista(u, v) && colores[v] != color){
+                double nuevo = dist[u] + unidades[v];
+                if(nuevo < dist[v]){
+                    dist[v] = nuevo;
+                    padre[v] = u;
+                }
+            }
+        }
+    }
+}
+int Tablero::buscarTerritorio(std::string texto){
+    std::string buscado = pasarAMinusculas(texto);
+    for(int i = 0; i < mapa.cantidadNodos(); i++){
+        std::string codigo = mapa.getNodo(i);
+        std::string nombre = getTerritorio(codigo).getNombre();
+        if(pasarAMinusculas(nombre) == buscado || codigo == texto){
+            return i;
+        }
+    }
+    return -1;
 }

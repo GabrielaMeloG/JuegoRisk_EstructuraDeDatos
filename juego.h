@@ -4,6 +4,7 @@
 #include <vector>
 #include <deque>
 #include <stack>
+#include "Grafo.h"
 
 //TAD territorio
 class Territorio {
@@ -82,9 +83,12 @@ class Continente {
 class Tablero {
     private:
         std::vector<Continente> continentes;
+        Grafo<std::string> mapa;                     // nodos = codigos de territorio, matriz = fronteras
         int cantidadCartasEntregadas;
     public:
         Tablero();
+        int indiceTerritorio(std::string codigo);
+        void construirAristas();
         int getCantidadCartasEntregadas();
         void cartasEntregadas();
         std::vector<Continente>& getContinentes();
@@ -92,6 +96,9 @@ class Tablero {
         Territorio& getTerritorio(std::string codigoTerritorio);
         bool existeTerritorioEnMapa(std::string codigoTerritorio); //esta funcion viene junto con la de verificar estructura pero esta no estaba implementada por lo que claude solamente nos dio la firma
         bool todosLosTerritoriosCubiertos(std::vector<std::string>& codigoTerritorio);//esta funcion viene junto con la de verificar estructura pero esta no estaba implementada por lo que claude solamente nos dio la firma
+        void dijkstraConquista(std::string color, std::vector<double>& dist, std::vector<int>& padre);
+        Grafo<std::string>& getMapa();
+        int buscarTerritorio(std::string texto);
 };
 class Baraja {
     private:
@@ -131,4 +138,3 @@ class EstadoJuego {
 };
 
 #endif
-
