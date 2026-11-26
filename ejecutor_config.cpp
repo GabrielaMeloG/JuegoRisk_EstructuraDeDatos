@@ -747,36 +747,41 @@ void EjecutorConfig::costoConquista(EstadoJuego &estado, std::vector<std::string
         std::cout << "El jugador " << tokens[1] << " no hace parte de esta partida." << std::endl;
         return;
     }
-    int destino = tablero.buscarTerritorio(tokens[2]);
-    if(destino == -1){
+    int indiceDestino = tablero.buscarTerritorio(tokens[2]);   // o indiceTerritorio si solo reciben codigo
+    if(indiceDestino == -1){
         std::cout << "El territorio " << tokens[2] << " no existe." << std::endl;
         return;
     }
     std::string color = estado.getJugadores()[estado.indiceJugador(tokens[1])].getColor();
     Grafo<std::string>& mapa = tablero.getMapa();
-    if(tablero.getTerritorio(mapa.getNodo(destino)).getColorOcupante() == color){
-        std::cout << "El territorio " << tokens[2] << " ya pertenece a " << tokens[1] << "." << std::endl;
+    std::string destino = mapa.getNodo(indiceDestino);
+    std::string nombredestino = tablero.getTerritorio(destino).getNombre();
+    if(tablero.getTerritorio(destino).getColorOcupante() == color){
+        std::cout << "El territorio " << nombredestino << " ya pertenece a " << tokens[1] << "." << std::endl;
         return;
     }
     std::vector<double> dist;
     std::vector<int> padre;
     tablero.dijkstraConquista(color, dist, padre);
-    if(padre[destino] == -1){
-        std::cout << tokens[1] << " no tiene forma de llegar al territorio " << tokens[2] << "." << std::endl;
+    if(padre[indiceDestino] == -1){
+        std::cout << tokens[1] << " no tiene forma de llegar al territorio " << nombredestino << "." << std::endl;
         return;
     }
-    std::vector<int> ruta = mapa.camino(padre, destino);   // ruta[0] = territorio propio desde donde ataca
-    std::cout << "Para conquistar el territorio " << tokens[2] << ", " << tokens[1] << " debe atacar desde " << mapa.getNodo(ruta[0]);
+    std::vector<int> ruta = mapa.camino(padre, indiceDestino);
+    std::string origen = mapa.getNodo(ruta[0]);
+    std::string nombreorigen = tablero.getTerritorio(origen).getNombre();
+    std::cout << "Para conquistar el territorio " << nombredestino << "(id : " << destino << "), " << tokens[1] << " debe atacar desde " << nombreorigen << "(id : " << origen << ")";
     if(ruta.size() > 2){
         std::cout << ", pasando por los territorios ";
         for(size_t k = 1; k < ruta.size() - 1; k++){
-            std::cout << mapa.getNodo(ruta[k]);
+            std::string intermedio = mapa.getNodo(ruta[k]);
+            std::cout << tablero.getTerritorio(intermedio).getNombre() << "(id : " << intermedio << ")";
             if(k < ruta.size() - 2){
                 std::cout << ", ";
             }
         }
     }
-    std::cout << ". Debe conquistar " << dist[destino] << " unidades de ejercito." << std::endl;
+    std::cout << ". Debe conquistar " << dist[indiceDestino] << " unidades de ejercito." << std::endl;
 }
 void EjecutorConfig::conquistaMasBarata(EstadoJuego &estado, std::vector<std::string> &tokens, Tablero &tablero, Baraja &baraja){
     if(tokens.size() != 2){
