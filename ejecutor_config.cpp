@@ -824,7 +824,7 @@ void EjecutorConfig::conquistaMasBarata(EstadoJuego &estado, std::vector<std::st
     if(ruta.size() > 2){
         std::cout << ", pasando por los territorios ";
         for(size_t k = 1; k < ruta.size() - 1; k++){
-            std::cout << mapa.getNodo(ruta[k]);
+            std::cout << tablero.getTerritorio(mapa.getNodo(ruta[k])).getNombre() << "(id : " << mapa.getNodo(ruta[k]) << ")";
             if(k < ruta.size() - 2){
                 std::cout << ", ";
             }
