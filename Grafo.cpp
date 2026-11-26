@@ -83,17 +83,6 @@ std::vector<int> Grafo<T>::vecinos(int nodo){
 }
 
 template <typename T>
-void Grafo<T>::imprimirMatriz(){
-    for (size_t i = 0; i < matriz.size(); i++) {
-        for (size_t j = 0; j < matriz.size(); j++) {
-            if (matriz[i][j] == SIN_ARISTA) std::cout << "  . ";
-            else std::cout << " " << matriz[i][j] << " ";
-        }
-        std::cout << std::endl;
-    }
-}
-
-template <typename T>
 std::vector<T>& Grafo<T>::getNodos() {
     return nodos;
 }
