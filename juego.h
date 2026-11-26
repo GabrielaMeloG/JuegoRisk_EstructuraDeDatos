@@ -83,7 +83,7 @@ class Continente {
 class Tablero {
     private:
         std::vector<Continente> continentes;
-        Grafo<std::string> mapa;                     // nodos = codigos de territorio, matriz = fronteras
+        Grafo<std::string> mapa;
         int cantidadCartasEntregadas;
     public:
         Tablero();

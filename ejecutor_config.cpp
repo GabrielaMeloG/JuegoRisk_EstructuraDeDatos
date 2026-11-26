@@ -747,7 +747,7 @@ void EjecutorConfig::costoConquista(EstadoJuego &estado, std::vector<std::string
         std::cout << "El jugador " << tokens[1] << " no hace parte de esta partida." << std::endl;
         return;
     }
-    int indiceDestino = tablero.buscarTerritorio(tokens[2]);   // o indiceTerritorio si solo reciben codigo
+    int indiceDestino = tablero.buscarTerritorio(tokens[2]);
     if(indiceDestino == -1){
         std::cout << "El territorio " << tokens[2] << " no existe." << std::endl;
         return;
@@ -802,7 +802,7 @@ void EjecutorConfig::conquistaMasBarata(EstadoJuego &estado, std::vector<std::st
     Grafo<std::string>& mapa = tablero.getMapa();
     std::vector<double> dist;
     std::vector<int> padre;
-    tablero.dijkstraConquista(color, dist, padre);         // una sola ejecucion sirve para todos los territorios
+    tablero.dijkstraConquista(color, dist, padre);
     int mejor = -1;
     for(int v = 0; v < mapa.cantidadNodos(); v++){
         if(tablero.getTerritorio(mapa.getNodo(v)).getColorOcupante() != color && padre[v] != -1){

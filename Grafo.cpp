@@ -2,7 +2,7 @@
 #include <string>
 #include <iostream>
 
-// Definicion de la constante (necesaria si se compila con C++11/C++14)
+// Definicion de la constante
 template <typename T>
 constexpr double Grafo<T>::SIN_ARISTA;
 
@@ -26,7 +26,6 @@ bool Grafo<T>::indiceValido(int i){
     return i >= 0 && i < (int)nodos.size();
 }
 
-// Agrega un vertice: crece la lista, y la matriz con una fila y una columna nuevas
 template <typename T>
 int Grafo<T>::insertarNodo(T& dato) {
     nodos.push_back(dato);
@@ -87,7 +86,6 @@ std::vector<T>& Grafo<T>::getNodos() {
     return nodos;
 }
 
-// Reconstruye el camino desde el origen hasta destino usando el vector padre (padre[origen] = -1)
 template <typename T>
 std::vector<int> Grafo<T>::camino(std::vector<int> padre, int destino){
     std::vector<int> ruta;

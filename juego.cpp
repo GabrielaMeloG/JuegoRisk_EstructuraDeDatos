@@ -87,16 +87,16 @@ Tablero::Tablero(){
             for(size_t i = 2; i < tokens.size(); i++){
                 std::string codigo = tokens[i];
                 if(!codigo.empty() && codigo[codigo.size() - 1] == ','){
-                    codigo.erase(codigo.size() - 1);          // "1.6," -> "1.6"
+                    codigo.erase(codigo.size() - 1);
                 }
                 adyacentes.push_back(codigo);
             }
             Territorio territorio(nombreContinente, codigoTerritorio, adyacentes);
             territorios.push_back(territorio);
-            mapa.insertarNodo(codigoTerritorio);       // el nodo guarda solo el codigo
+            mapa.insertarNodo(codigoTerritorio);
         }
     }
-    construirAristas();                               // nuevo: fronteras cuando ya están todos
+    construirAristas();
 }
 std::vector<Continente>& Tablero::getContinentes() { 
     return continentes; 
@@ -497,16 +497,13 @@ Grafo<std::string>& Tablero::getMapa(){
     return mapa;
 }
 
-// Dijkstra desde TODOS los territorios del color dado (todos arrancan con costo 0).
-// Entrar a un territorio enemigo cuesta sus unidades; a los propios no se entra.
-// El color y las unidades se leen de los continentes (unico lugar donde se guardan).
 void Tablero::dijkstraConquista(std::string color, std::vector<double>& dist, std::vector<int>& padre){
     int n = mapa.cantidadNodos();
     double INF = 1000000000;
     dist.assign(n, INF);
     padre.assign(n, -1);
     std::vector<bool> definitivo(n, false);
-    std::vector<std::string> colores(n);              // datos actuales de cada nodo, leidos una vez
+    std::vector<std::string> colores(n);
     std::vector<int> unidades(n);
     for(int i = 0; i < n; i++){
         Territorio& territorio = getTerritorio(mapa.getNodo(i));
